@@ -1,0 +1,116 @@
+use super::parser::*;
+
+/// Whitespace
+
+newline = "\n" / "\r\n" / !.
+
+whitespace = ' ' / '\t'
+
+_ = (whitespace) +
+
+non_whitespace = (!(whitespace / newline) .)+
+
+comment = "//" (!newline .)*
+
+line<contents> = contents _ comment? newline
+
+named_line<contents> = this:contents _ comment? newline { this }
+
+/// Commands
+
+arg_separator = "---"
+
+name -> &'input str
+   = $(non_whitespace (_ !arg_separator non_whitespace)*)
+
+identifier -> &'input str
+  = $([A-Za-z_-]+)
+
+css_file -> &'input str
+  = filename:identifier ".css"? { filename }
+
+file_extension -> &'input str
+  = $("." [A_Za-z_-]+)
+
+comment_pattern -> &'input str
+  = $(non_whitespace ++ _)
+
+error_pattern -> &'input str
+  = $(non_whitespace ++ _)
+
+shell_command -> &'input str
+  = $(non_whitespace ++ _)
+
+a_command -> Command<'input>
+  = "title" _ title:name { Command::Title(title) }
+  / "s" _ section_name:(name?) { Command::Section(section_name) }
+  / "code_type" _ ctype:identifier _ extension:file_extension 
+    { Command::CodeType { code_type: ctype, file_extension: extension } }
+  / "comment_type" _ pattern:comment_pattern { Command::CommentType(pattern) }
+  / "compiler" _ sh_command:shell_command { Command::Compiler(sh_command) }
+  / "error_format" _ err_format:error_pattern { Command::ErrorFormat(err_format) }
+  / "book" _ { Command::Book }
+  / "add_css" _ file:css_file { Command::AddCss(file) }
+  / "overwrite_css" _ file:css_file { Command::OverwriteCss(file) }
+  / "colorscheme" _ file:css_file { Command::Colorscheme(file) }
+
+command -> Command<'input>
+  = "@" a_command:a_command { a_command }
+
+/// Code blocks
+
+code_line -> &'input str
+  = !codeblock_delim line:$((!newline .)*) { line }
+code -> Vec<&'input str>
+  = (line:code_line newline { line })*
+
+codeblock_delim = "---"
+
+block_name -> &'input str
+  = name
+
+block_modifier -> BlockModifier
+  = append
+  / redef
+  / arg_separator _ mods:(block_mods ++ _) { mods.into_iter().fold(BlockModifier::empty(), |set, flag| set | flag) }
+
+block_mods -> BlockModifier
+  = append  
+  / redef 
+  / "noTangle" { BlockModifier::NoTangle }
+  / "noWeave" { BlockModifier::NoWeave }
+  / "noHeader" { BlockModifier::NoHeader}
+append -> BlockModifier
+ = "+=" { BlockModifier::Append }
+redef -> BlockModifier 
+  = "-=" { BlockModifier::Redef }
+
+codeblock_header -> (&'input str, BlockModifier)
+   = codeblock_delim _? name:block_name _? mods:block_modifier { (name, mods) }
+
+codeblock -> CodeBlock<'input>
+  = header:named_line<codeblock_header> contents:code line<codeblock_delim> {
+      let (block_name, modifiers) = header;
+      CodeBlock { block_name, modifiers, contents }
+  }
+
+/// Prose
+
+block_spacing = (line<whitespace>)+
+
+prose -> &'input str
+  = $((!codeblock_header !command) (non_whitespace ++ _))
+
+prose_block -> Vec<&'input str>
+  = (named_line<prose> ++ block_spacing)
+
+/// The whole file
+
+lit_block -> LitBlock<'input>
+  = command:named_line<command> { LitBlock::Command(command) }
+  / codeblock:codeblock { LitBlock::Code(codeblock) }
+  / prose:prose_block { LitBlock::Prose(prose) }
+
+pub lit_file -> Vec<LitBlock<'input>>
+  = (lit_block ++ block_spacing)
+
