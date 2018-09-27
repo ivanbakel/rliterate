@@ -22,6 +22,12 @@ pub fn get_arg_parser() -> App<'static, 'static> {
             .required(false)
             .takes_value(true))
         .arg(
+            Arg::with_name("line_numbers")
+            .short("l")
+            .long("linenums")
+            .required(false)
+            .takes_value(true))
+        .arg(
             Arg::with_name("tangle")
             .short("t")
             .long("tangle"))
