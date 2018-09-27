@@ -6,6 +6,10 @@ pub fn get_arg_parser() -> App<'static, 'static> {
         .before_help("Consult the `literate` docs for information about the .lit format.")
         .version(crate_version!())
         .arg(
+            Arg::with_name("input")
+            .index(1)
+            .required(true))
+        .arg(
             Arg::with_name("no_output")
             .short("no")
             .long("no-output")
