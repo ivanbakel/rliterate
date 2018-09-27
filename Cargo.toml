@@ -1,0 +1,6 @@
+[package]
+name = "rliterate"
+version = "0.1.0"
+authors = ["Isaac van Bakel <ivb@vanbakel.io>"]
+
+[dependencies]
