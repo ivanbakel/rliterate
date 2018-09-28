@@ -1,5 +1,6 @@
 use parser::{ParseState, ParseResult, ParseError, get_input_file};
 use grammar::{LitBlock, CodeBlock, Command, BlockModifier};
+use output::{CustomCss, CssSettings};
 
 use std::path::{PathBuf};
 
@@ -35,7 +36,8 @@ mod macros {
 
 pub struct LitFile {
     pub title: String,
-    pub code_type: (String, String),
+    pub code_type: String,
+    pub file_extension: String,
     pub comment_type: &'static Fn(String) -> String,
     pub sections: Vec<Section>,
     pub compiler: Option<CompilerSettings>,
@@ -45,7 +47,7 @@ pub struct LitFile {
 impl LitFile {
     pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> ParseResult<(Self, CssSettings)> {
         let mut title = None;
-        let mut code_type = None;
+        let mut code_type_and_file_extension = None;
         let mut comment_type = None;
         let mut compiler_command = None;
         let mut error_format = None;
@@ -68,7 +70,7 @@ impl LitFile {
                         once!(title, title_slice.to_owned())
                     },
                     Command::CodeType { code_type: ctype, file_extension: extension } => {
-                        once!(code_type, (ctype.to_owned(), extension.to_owned()))
+                        once!(code_type_and_file_extension, (ctype.to_owned(), extension.to_owned()))
                     },
                     Command::CommentType(formatter) => {
                         once!(comment_type, generate_comment_type(formatter))
@@ -132,7 +134,7 @@ impl LitFile {
         sections.push(current_section);
     
         // Error if required fields haven't been populated
-        require!(title, code_type, comment_type);
+        require!(title, code_type_and_file_extension, comment_type);
 
         // Generate the book status
         let book_status = if is_book || !chapters.is_empty() {
@@ -141,9 +143,12 @@ impl LitFile {
             BookStatus::NotBook
         };
 
+        let (code_type, file_extension) = code_type_and_file_extension;
+
         Ok((LitFile {
                 title: title,
                 code_type: code_type,
+                file_extension: file_extension,
                 comment_type: comment_type,
                 sections: sections,
                 compiler: compiler_settings,
@@ -159,26 +164,6 @@ impl LitFile {
 pub enum BookStatus {
     NotBook,
     IsBook(Vec<PathBuf>)
-}
-
-pub struct CssSettings {
-    pub custom_css: CustomCss,
-    pub custom_colorscheme: Option<String>,
-}
-
-pub enum CustomCss {
-    None,
-    Add(String),
-    Overwrite(String),
-}
-
-impl CustomCss {
-    fn is_not_none(&self) -> bool {
-        match self {
-            &CustomCss::None => false,
-            _ => true
-        }
-    }
 }
 
 pub struct CompilerSettings {

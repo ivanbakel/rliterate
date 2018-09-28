@@ -5,11 +5,37 @@ use clap::{ArgMatches};
 use std::path::{Path, PathBuf};
 use std::env;
 
+pub struct CssSettings {
+    pub custom_css: CustomCss,
+    pub custom_colorscheme: Option<String>,
+}
+
+impl CssSettings {
+    pub fn is_default(&self) -> bool {
+        !self.custom_css.is_not_none() && self.custom_colorscheme.is_none()
+    }
+}
+
+pub enum CustomCss {
+    None,
+    Add(String),
+    Overwrite(String),
+}
+
+impl CustomCss {
+    pub fn is_not_none(&self) -> bool {
+        match self {
+            &CustomCss::None => false,
+            _ => true
+        }
+    }
+}
+
 pub struct OutputSettings {
     out_dir: PathBuf,
     generate_output: bool,
     weave: Option<WeaveType>,
-    tangle: Option<TangleSettings>,
+    tangle: Option<TangleSettings>, 
 }
 
 impl OutputSettings {
@@ -33,7 +59,8 @@ impl OutputSettings {
                 .map(|format_string| generate_line_numbers(format_string));
 
             Some(TangleSettings {
-                line_numbers: line_numbers
+                compile: args.is_present("compiler"),
+                line_numbers: line_numbers,
             })
         };
 
@@ -46,14 +73,17 @@ impl OutputSettings {
     }
 
     pub fn process(&self, parse_state: parser::ParseState) {
-    
+        for (path, lit_file) in parse_state.file_map.iter() {
+            if let Some(ref settings) = self.tangle {
+                tangle_file(settings, path, lit_file);
+            }
+
+            if let Some(ref weave_type) = self.weave {
+                weave_file(weave_type, path, lit_file);
+            }
+        }
     }
 
-    fn weave(&self, file_name: &PathBuf, file: &mut LitFile) {
-    }
-
-    fn tangle(&self, file_name: &PathBuf, file: &mut LitFile) {
-    }
 }
 
 enum WeaveType {
@@ -62,8 +92,16 @@ enum WeaveType {
     StraightToHtml,
 }
 
+fn weave_file(weave_type: &WeaveType, file_name: &PathBuf, file: &LitFile) {
+}
+
+
 struct TangleSettings {
+    compile: bool,
     line_numbers: Option<&'static Fn(usize) -> String>,
+}
+    
+fn tangle_file(settings: &TangleSettings, file_name: &PathBuf, file: &LitFile) {
 }
 
 fn generate_line_numbers(format_string: &str) -> (&'static Fn(usize) -> String) {

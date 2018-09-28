@@ -1,6 +1,6 @@
-#[macro_use]
 use ast;
-use ast::{LitFile, CssSettings};
+use ast::{LitFile};
+use output::{CssSettings};
 use grammar;
 
 use std::collections::{HashMap, HashSet};
