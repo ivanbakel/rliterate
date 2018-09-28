@@ -18,7 +18,8 @@ pub fn get_arg_parser() -> App<'static, 'static> {
             Arg::with_name("compiler")
             .short("c")
             .long("compiler")
-            .required(false))
+            .required(false)
+            .conflicts_with("weave"))
         .arg(
             Arg::with_name("output_directory")
             .short("odir")
