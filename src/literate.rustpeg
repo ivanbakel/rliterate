@@ -1,5 +1,3 @@
-use super::parser::*;
-
 /// Whitespace
 
 newline = "\n" / "\r\n" / !.
@@ -104,10 +102,18 @@ prose -> &'input str
 prose_block -> Vec<&'input str>
   = (named_line<prose> ++ block_spacing)
 
+/// Chapter links
+chapter -> (&'input str, &'input str)
+  = "[" _ title:name _ "](" filename:identifier ".lit"? ")" { (title, filename) }
+
 /// The whole file
 
 lit_block -> LitBlock<'input>
   = command:named_line<command> { LitBlock::Command(command) }
+  / chapter:named_line<chapter> { 
+      let (title, filename) = chapter;
+      LitBlock::Chapter { title: title, file_name: filename }
+  }
   / codeblock:codeblock { LitBlock::Code(codeblock) }
   / prose:prose_block { LitBlock::Prose(prose) }
 

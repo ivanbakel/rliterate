@@ -5,9 +5,8 @@ extern crate clap;
 extern crate peg;
 
 mod args;
-mod grammar {
-    include!(concat!(env!("OUT_DIR"), "/literate.rs"));
-}
+mod grammar; 
+#[macro_use]
 mod ast;
 mod parser;
 
@@ -19,7 +18,7 @@ fn main() {
     //TODO: parse the source files
     //TODO: construct the AST
     
-    let parse_map : Result<ast::FileMap, _> = ast::generate_file_map(input_path);
+    let parse_state = parser::ParseState::from_input_path(input_path);
 
     //TODO: link blocks together
     //TODO: print it all somewhere
