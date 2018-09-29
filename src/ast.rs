@@ -1,6 +1,6 @@
 use parser::{ParseState, ParseResult, ParseError, get_input_file};
 use grammar::{LitBlock, CodeBlock, Command, BlockModifier};
-use output::{CustomCss, CssSettings};
+use output::css::{CustomCss, CssSettings};
 
 use std::path::{PathBuf};
 
@@ -187,8 +187,8 @@ impl SectionName {
 }
 
 pub struct Section {
-    name: SectionName,
-    blocks: Vec<Block>
+    pub name: SectionName,
+    pub blocks: Vec<Block>
 }
 
 pub enum Block {
