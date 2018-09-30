@@ -1,9 +1,11 @@
-struct TangleSettings {
+use output::{OutputResult};
+
+pub struct Settings {
     compile: bool,
     line_numbers: Option<&'static Fn(usize) -> String>,
 }
     
-fn tangle_file(settings: &TangleSettings, file: &LitFile) -> OutputResult<()> {
+pub fn tangle_file(settings: &Settings, file: &LitFile) -> OutputResult<()> {
     let canonical_code_blocks = canonicalise_code_blocks(&file.sections);
 
     for (name, block) in canonical_code_blocks.iter() {

@@ -2,6 +2,10 @@ use parser;
 use ast::{LitFile, Section, Block};
 use grammar::{BlockModifier};
 
+pub mod css;
+mod tangle;
+mod weave;
+
 use clap::{ArgMatches};
 use std::collections::{HashMap};
 use std::path::{Path, PathBuf};
@@ -22,8 +26,8 @@ impl From<io::Error> for OutputError {
 pub struct OutputSettings {
     out_dir: PathBuf,
     generate_output: bool,
-    weave: Option<WeaveType>,
-    tangle: Option<TangleSettings>, 
+    weave: Option<weave::Type>,
+    tangle: Option<tangle::Settings>, 
 }
 
 impl OutputSettings {
@@ -37,7 +41,7 @@ impl OutputSettings {
         let weave = if args.is_present("tangle") {
             None
         } else {
-            Some(WeaveType::StraightToHtml)
+            Some(weave::Type::StraightToHtml)
         };
 
         let tangle = if args.is_present("weave") {
@@ -46,7 +50,7 @@ impl OutputSettings {
             let line_numbers = args.value_of("line_numbers")
                 .map(|format_string| generate_line_numbers(format_string));
 
-            Some(TangleSettings {
+            Some(tangle::Settings {
                 compile: args.is_present("compiler"),
                 line_numbers: line_numbers,
             })
@@ -65,11 +69,11 @@ impl OutputSettings {
             let linked_file = link_lit_file(lit_file)?;
 
             if let Some(ref settings) = self.tangle {
-                tangle_file(settings, path, linked_file);
+                tangle::tangle_file(settings, linked_file)?;
              }
 
             if let Some(ref weave_type) = self.weave {
-                weave_file(weave_type, path, linked_file);
+                weave::weave_file(weave_type, path, linked_file)?;
             }
         }
     }
