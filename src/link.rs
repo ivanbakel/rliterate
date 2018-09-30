@@ -1,8 +1,14 @@
 use parser;
+use parser::{LitFile, Block, BlockModifier};
 
 use std::collections::{HashMap};
+use std::path::{PathBuf};
 
-include!(concat!(env!("OUT_DIR"), "/link_parsing.rs"));
+mod grammar {
+    use super::*;
+
+    include!(concat!(env!("OUT_DIR"), "/link_parsing.rs"));
+}
 
 pub struct LinkState<'a> {
     pub file_map: HashMap<&'a PathBuf, LinkedFile<'a>>,
@@ -10,7 +16,7 @@ pub struct LinkState<'a> {
 
 impl<'a> LinkState<'a> {
     pub fn link(parse_state: &'a parser::ParseState) -> LinkResult<Self> {
-        let file_map = HashMap::new();
+        let mut file_map = HashMap::new();
     
         for (path, lit_file) in parse_state.file_map.iter() {
             let linked_file = link_lit_file(lit_file)?;
@@ -24,44 +30,47 @@ impl<'a> LinkState<'a> {
     }
 }
 
-type LinkMap<'a> = HashMap<&'a String, Vec<&'a String>>;
+type LinkMap<'a> = HashMap<&'a str, Vec<&'a str>>;
 
 pub struct LinkedFile<'a> {
     pub comment_type: &'static Fn(String) -> String,
     pub sections: Vec<LinkedSection<'a>>,
 }
 
-struct LinkedSection<'a> {
+pub struct LinkedSection<'a> {
     pub blocks: Vec<LinkedBlock<'a>>,
 }
 
-enum LinkedBlock<'a> {
-    Code { name: String, modifiers: BlockModifier, lines: Vec<LinkedLine<'a>> },
+pub enum LinkedBlock<'a> {
+    Code { name: &'a String, modifiers: BlockModifier, lines: Vec<LinkedLine<'a>> },
     Prose { lines: Vec<LinkedLine<'a>> },
 }
 
 impl<'a> LinkedBlock<'a> {
     fn get_lines(&self) -> &[LinkedLine<'a>] {
         match self {
-            &Self::Code { lines, .. } => &lines[..],
-            &Self::Prose { lines } => &lines[..]
+            &LinkedBlock::Code { ref lines, .. } => &lines[..],
+            &LinkedBlock::Prose { ref lines } => &lines[..]
         }
     }
 }
 
+#[derive(Clone)]
 pub struct LinkedLine<'a>(Vec<LinkPart<'a>>);
 
 impl<'a> LinkedLine<'a> {
     fn get_links(&self) -> Vec<&'a str> {
-        self.iter().filter_map(|part| {
+        let LinkedLine(parts) = self;
+        parts.iter().filter_map(|part| {
             match part {
-                &Link(contents) => Some(contents),
+                &LinkPart::Link(contents) => Some(contents),
                 _ => None
             }
-        }
+        }).collect()
     }
 }
 
+#[derive(Clone)]
 pub enum LinkPart<'a> {
     Link(&'a str),
     Text(&'a str),
@@ -69,7 +78,7 @@ pub enum LinkPart<'a> {
 
 type LinkResult<T> = Result<T, LinkError>;
 
-enum LinkError {
+pub enum LinkError {
     InfiniteCodeLoop,
     BadLinkName,
 }
@@ -77,21 +86,21 @@ enum LinkError {
 fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
     let mut link_map = LinkMap::new();
     
-    let linked_sections = lit_file.sections().map(|section| {
+    let linked_sections : Vec<LinkedSection<'a>> = lit_file.sections.iter().map(|section| {
         LinkedSection {
-            blocks: section.blocks.map(|block| {
+            blocks: section.blocks.iter().map(|block| {
                 link_block(block, &mut link_map)       
             }).collect()
         }
     }).collect();
 
-    let all_links = linked_sections.iter().flat_map(|section| {
-        section.blocks.flat_map(|block| {
-            block.get_lines().flat_map(|line| {
+    let all_links : Vec<&'a str> = linked_sections.iter().flat_map(|section| {
+        section.blocks.iter().flat_map(|block| {
+            block.get_lines().iter().flat_map(|line| {
                 line.get_links()
             })
         })
-    });
+    }).collect();
 
     //TODO: Detect a cycle!
 
@@ -107,32 +116,38 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
     })
 }
 
-fn link_block<'a>(block: &'a Block, link_map : &mut LinkMap) -> LinkedBlock<'a> {
-    Block::Code { name, modifiers, lines } => {
-        let linked_lines = link_lines(lines);
-        let linked_to = linked_lines.flat_map(|line| line.get_links());
+fn link_block<'a>(block: &'a Block, link_map : &mut LinkMap<'a>) -> LinkedBlock<'a> {
+    match block {
+        &Block::Code { ref name, modifiers, ref lines } => {
+            let linked_lines = link_lines(lines);
+            let mut linked_to : Vec<&'a str> = linked_lines.iter()
+                .flat_map(|line| line.get_links())
+                .collect();
+    
+            let key = name.as_str();
 
-        if link_map.contains_key(&name) {
-            let link_record = link_map.get_mut(name).unwrap();
-            link_record.append(linked_to);
-        } else {
-            link_map.insert(&name, linked_to);
-        }
-
-        LinkedBlock::Code {
-            name: name,
-            modifiers: modifiers,
-            lines: linked_lines,
-        }
-    },
-    Block::Prose { lines } => {
-        LinkedBlock::Prose {
-            lines: link_lines(lines)
+            if link_map.contains_key(key) {
+                let link_record = link_map.get_mut(key).unwrap();
+                link_record.append(&mut linked_to);
+            } else {
+                link_map.insert(name, linked_to);
+            }
+    
+            LinkedBlock::Code {
+                name: name,
+                modifiers: modifiers,
+                lines: linked_lines,
+            }
+        },
+        &Block::Prose { ref lines } => {
+            LinkedBlock::Prose {
+                lines: link_lines(lines)
+            }
         }
     }
 } 
 
 fn link_lines<'a>(lines: &'a [String]) -> Vec<LinkedLine<'a>> {
-    lines.iter().map(|line| link_line(line).unwrap()).collect()
+    lines.iter().map(|line| grammar::link_line(line).unwrap()).collect()
 }
 

@@ -1,7 +1,8 @@
 use ast;
-use ast::{LitFile};
-use output::{CssSettings};
+pub use ast::{LitFile, Block};
+use output::css::{CssSettings};
 use grammar;
+pub use grammar::{BlockModifier};
 
 use std::collections::{HashMap, HashSet};
 use std::fs;

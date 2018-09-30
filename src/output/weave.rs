@@ -1,4 +1,7 @@
 use output::{OutputResult};
+use link::{LinkedFile};
+
+use std::path::{PathBuf};
 
 pub enum Type {
     Markdown,
@@ -6,6 +9,7 @@ pub enum Type {
     StraightToHtml,
 }
 
-pub fn weave_file(weave_type: &WeaveType, file_name: &PathBuf, file: &LitFile) -> OutputResult<()> {
+pub fn weave_file<'a>(weave_type: &Type, file_name: &PathBuf, file: &LinkedFile<'a>) -> OutputResult<()> {
+    Ok(())
 }
 

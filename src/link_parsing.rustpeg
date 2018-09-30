@@ -15,5 +15,5 @@ text -> LinkPart<'input>
 link -> LinkPart<'input>
   = link_start _ name:$(name) _ link_end { LinkPart::Link(name) }
 
-link_line -> LinkedLine<'input>
+pub link_line -> LinkedLine<'input>
   = parts:((text / link) *) { LinkedLine(parts) }

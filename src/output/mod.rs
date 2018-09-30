@@ -5,15 +5,16 @@ use grammar::{BlockModifier};
 pub mod css;
 mod tangle;
 mod weave;
+use super::link;
 
 use clap::{ArgMatches};
-use std::collections::{HashMap};
 use std::path::{Path, PathBuf};
 use std::env;
+use std::io;
 
 type OutputResult<T> = Result<T, OutputError>;
 
-enum OutputError {
+pub enum OutputError {
     FileSystem(io::Error),
 }
 
@@ -75,6 +76,8 @@ impl OutputSettings {
                 weave::weave_file(weave_type, path, linked_file)?;
             }
         }
+
+        Ok(())
     }
 
 }
