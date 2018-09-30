@@ -1,0 +1,19 @@
+whitespace = ' ' / '\t'
+
+non_whitespace = !whitespace .
+
+_ = whitespace+
+
+name = ((!link_end non_whitespace)+) ++ _
+
+link_start = "@{"
+link_end = "}"
+
+text -> LinkPart<'input>
+  = text:$((!link_start .)*) { LinkPart::Text(text) }
+
+link -> LinkPart<'input>
+  = link_start _ name:$(name) _ link_end { LinkPart::Link(name) }
+
+link_line -> LinkedLine<'input>
+  = parts:((text / link) *) { LinkedLine(parts) }

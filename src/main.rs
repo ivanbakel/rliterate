@@ -9,6 +9,7 @@ mod grammar;
 #[macro_use]
 mod ast;
 mod parser;
+mod link;
 mod output;
 
 fn main() {
@@ -20,7 +21,10 @@ fn main() {
 
     parse_state.map(|state| {
             let output_settings = output::OutputSettings::from_args(&args);
-            output_settings.process(state)
+
+            let linked_state = link::link(state);
+
+            output_settings.process(linked_state)
         });
 }
 

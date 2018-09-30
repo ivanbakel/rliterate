@@ -64,9 +64,8 @@ impl OutputSettings {
         }
     }
 
-    pub fn process(&self, parse_state: parser::ParseState) -> OutputResult<()> {
-        for (path, lit_file) in parse_state.file_map.iter() {
-            let linked_file = link_lit_file(lit_file)?;
+    pub fn process<'a>(&self, link_state: link::LinkState<'a>) -> OutputResult<()> {
+        for (path, linked_file) in link_state.file_map.iter() {
 
             if let Some(ref settings) = self.tangle {
                 tangle::tangle_file(settings, linked_file)?;
