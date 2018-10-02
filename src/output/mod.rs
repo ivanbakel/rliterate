@@ -78,11 +78,11 @@ impl OutputSettings {
         for (path, linked_file) in link_state.file_map.iter() {
 
             if let Some(ref settings) = self.tangle {
-                tangle::tangle_file(settings, linked_file)?;
+                tangle::tangle_file(settings, linked_file, &self.out_dir)?;
              }
 
             if let Some(ref weave_type) = self.weave {
-                weave::weave_file(weave_type, path, linked_file)?;
+                weave::weave_file(weave_type, path, linked_file, &self.out_dir)?;
             }
         }
 

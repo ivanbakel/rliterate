@@ -8,12 +8,12 @@ use std::path::{Path};
 use std::fs;
 use std::io::{Write};
 
-pub fn tangle_file<'a>(settings: &Settings, file: &LinkedFile<'a>) -> OutputResult<()> {
+pub fn tangle_file<'a>(settings: &Settings, file: &LinkedFile<'a>, out_dir: &Path) -> OutputResult<()> {
     let canonical_code_blocks = canonicalise_code_blocks(&file.sections[..]);
 
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
-        let to_file = fs::OpenOptions::new().write(true).open(name)?;
+        let to_file = fs::OpenOptions::new().write(true).open(out_dir.join(name))?;
 
         settings.print_file(to_file, name, block, &canonical_code_blocks)?;
     }

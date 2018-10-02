@@ -5,7 +5,7 @@ use link::{LinkedFile, LinkedBlock, LinkedLine};
 use pulldown_cmark as cmark;
 
 use std::borrow::{Cow};
-use std::path::{PathBuf};
+use std::path::{PathBuf, Path};
 use std::fs;
 use std::io::{Write};
 use std::vec;
@@ -20,7 +20,7 @@ pub enum Type {
     HtmlViaMarkdown(Option<String>),
 }
 
-pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>) -> OutputResult<()> {
+pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>, out_dir: &Path) -> OutputResult<()> {
     match settings.weave_type {
         Type::HtmlViaMarkdown(ref maybe_command) => {
             let markdown = MarkDown::build(settings, file);
@@ -28,7 +28,7 @@ pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFil
             let mut html_filename = file_name.clone();
             html_filename.set_extension("html");
 
-            let html_file = fs::OpenOptions::new().write(true).open(html_filename)?;
+            let html_file = fs::OpenOptions::new().write(true).open(out_dir.join(html_filename))?;
 
             if let Some(ref command) = maybe_command {
                 call_markdown_compiler(command, html_file, markdown)
