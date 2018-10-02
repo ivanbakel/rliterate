@@ -33,11 +33,13 @@ impl<'a> LinkState<'a> {
 type LinkMap<'a> = HashMap<&'a str, Vec<&'a str>>;
 
 pub struct LinkedFile<'a> {
+    pub title: &'a str,
     pub comment_type: &'static Fn(String) -> String,
     pub sections: Vec<LinkedSection<'a>>,
 }
 
 pub struct LinkedSection<'a> {
+    pub name: &'a str,
     pub blocks: Vec<LinkedBlock<'a>>,
 }
 
@@ -59,6 +61,7 @@ impl<'a> LinkedBlock<'a> {
 pub struct LinkedLine<'a> {
     parts: Vec<LinkPart>,
     slices: Vec<&'a str>,
+    text: &'a str,
 }
 
 impl<'a> LinkedLine<'a> {
@@ -81,6 +84,10 @@ impl<'a> LinkedLine<'a> {
             parts: &self.parts[..],
             slices: &self.slices[..],
         }
+    }
+
+    pub fn get_text<'b>(&'b self) -> &'b str {
+        self.text
     }
 }
 
@@ -149,6 +156,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
     
     let linked_sections : Vec<LinkedSection<'a>> = lit_file.sections.iter().map(|section| {
         LinkedSection {
+            name: section.name.as_str(),
             blocks: section.blocks.iter().map(|block| {
                 link_block(block, &mut link_map)       
             }).collect()
@@ -172,6 +180,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
     }
 
     Ok(LinkedFile {
+        title: &lit_file.title,
         comment_type: lit_file.comment_type,
         sections: linked_sections,
     })
@@ -209,6 +218,10 @@ fn link_block<'a>(block: &'a Block, link_map : &mut LinkMap<'a>) -> LinkedBlock<
 } 
 
 fn link_lines<'a>(lines: &'a [String]) -> Vec<LinkedLine<'a>> {
-    lines.iter().map(|line| grammar::link_line(line).unwrap()).collect()
+    lines.iter().map(|line| {
+        let mut linked_line = grammar::link_line(line).unwrap();
+        linked_line.text = line;
+        linked_line
+    }).collect()
 }
 

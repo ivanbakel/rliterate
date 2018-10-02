@@ -29,5 +29,6 @@ pub link_line -> LinkedLine<'input>
       LinkedLine {
           parts: parts,
           slices: slices,
+          text: "",
       }
     }
