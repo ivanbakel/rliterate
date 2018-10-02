@@ -184,6 +184,13 @@ impl SectionName {
             None => SectionName::None
         }
     }
+
+    pub fn as_str(&self) -> &str {
+        match self {
+            &SectionName::Declared(ref name) => name.as_str(),
+            &SectionName::Implicit | &SectionName::None => "",
+        }
+    }
 }
 
 pub struct Section {
