@@ -9,11 +9,25 @@ name = ((!link_end non_whitespace)+) ++ _
 link_start = "@{"
 link_end = "}"
 
-text -> LinkPart<'input>
-  = text:$((!link_start .)*) { LinkPart::Text(text) }
+text -> (LinkPart, &'input str)
+  = text:$((!link_start .)*) { (LinkPart::Text, text) }
 
-link -> LinkPart<'input>
-  = link_start _ name:$(name) _ link_end { LinkPart::Link(name) }
+link -> (LinkPart, &'input str)
+  = link_start _ name:$(name) _ link_end { (LinkPart::Link, name) }
 
 pub link_line -> LinkedLine<'input>
-  = parts:((text / link) *) { LinkedLine(parts) }
+  = parts:((text / link) *) { 
+      let (parts, slices) = parts
+        .into_iter()
+        .fold((vec![], vec![]), 
+        |(mut ps, mut ns), (part, name)| { 
+            ps.push(part);
+            ns.push(name);
+            (ps, ns)
+        });
+      
+      LinkedLine {
+          parts: parts,
+          slices: slices,
+      }
+    }

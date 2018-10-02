@@ -1,27 +1,92 @@
 use output::{OutputResult};
 use parser::{BlockModifier};
+use link;
 use link::{LinkedFile, LinkedSection, LinkedBlock, LinkedLine};
 
 use std::collections::{HashMap};
 use std::path::{Path};
 use std::fs;
+use std::io::{Write};
+
+pub fn tangle_file<'a>(settings: &Settings, file: &LinkedFile<'a>) -> OutputResult<()> {
+    let canonical_code_blocks = canonicalise_code_blocks(&file.sections[..]);
+
+    for (name, block) in canonical_code_blocks.iter()
+        .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
+        let to_file = fs::OpenOptions::new().write(true).open(name)?;
+
+        settings.print_file(to_file, name, block, &canonical_code_blocks)?;
+    }
+
+    Ok(())
+}
 
 pub struct Settings {
     pub compile: bool,
     pub line_numbers: Option<&'static Fn(usize) -> String>,
 }
-    
-pub fn tangle_file<'a>(settings: &Settings, file: &LinkedFile<'a>) -> OutputResult<()> {
-    let canonical_code_blocks = canonicalise_code_blocks(&file.sections[..]);
 
-    for (name, block) in canonical_code_blocks.iter() {
-        if block.is_file() {
-            let to_file = fs::OpenOptions::new().write(true).open(name)?;
+impl Settings {
+    fn print_file<'a>(&self,
+                      mut file: fs::File,
+                      name: &'a str, 
+                      file_block: &CanonicalCodeBlock<'a>, 
+                      blocks: &BlockMap<'a>) -> OutputResult<()> {
+        self.print_block(&mut file, name, file_block, blocks, vec![], vec![])?;
+        
+        //TODO: Compile the file!
+        Ok(())
+    }
+    
+    fn print_block<'a>(&self, 
+                       file: &mut fs::File,
+                       name: &'a str, 
+                       block: &CanonicalCodeBlock<'a>, 
+                       blocks: &BlockMap<'a>,
+                       prependix: Vec<&'a str>,
+                       appendix: Vec<&'a str>) -> OutputResult<()> {
+        if block.print_header {
+            Self::print_line(file, &prependix[..], name, &appendix[..]);
         }
+
+        for line in block.contents.iter() {
+            let mut printed_link = false;
+
+            for (pre_link, link, post_link) in line.split_links() {
+                printed_link = true;
+
+                let mut sub_pre = prependix.clone();
+                sub_pre.extend_from_slice(pre_link);
+
+                let mut sub_app = appendix.clone();
+                sub_app.extend_from_slice(post_link);
+
+                self.print_block(file, link, blocks.get(link).unwrap(), blocks, sub_pre, sub_app)?;
+            }
+
+            if !printed_link {
+                Self::print_line(file, &prependix[..], name, &appendix[..]);
+            }
+        }
+
+        Ok(())
     }
 
-    Ok(())
+    fn print_line(file: &mut fs::File, prependix: &[&str], line: &str, appendix: &[&str]) {
+        for pre in prependix {
+            write!(file, "{}", pre);
+        }
+
+        write!(file, "{}", line);
+
+        for post in appendix {
+            write!(file, "{}", post);
+        }
+
+        writeln!(file, "");
+    }
 }
+    
 
 struct CanonicalCodeBlock<'a> {
     print_header: bool,
@@ -54,6 +119,10 @@ impl<'a> CanonicalCodeBlock<'a> {
         }
     }
 
+    fn print_to_tangle(&self) -> bool {
+        self.print_to_tangle
+    }
+
     fn append_lines(&mut self, lines: &[LinkedLine<'a>]) {
         self.contents.extend_from_slice(lines);
     }
@@ -76,13 +145,16 @@ impl<'a> CanonicalCodeBlock<'a> {
     }
 }
 
-fn canonicalise_code_blocks<'a>(sections: &[LinkedSection<'a>]) -> HashMap<&'a String, CanonicalCodeBlock<'a>> {
-    let mut block_map : HashMap<&'a String, CanonicalCodeBlock<'a>> = HashMap::new();
+type BlockMap<'a> = HashMap<&'a str, CanonicalCodeBlock<'a>>;
+
+fn canonicalise_code_blocks<'a>(sections: &[LinkedSection<'a>]) -> BlockMap<'a> {
+    let mut block_map : BlockMap<'a> = HashMap::new();
     
     for section in sections {
         for block in section.blocks.iter() {
             match block {
                 LinkedBlock::Code { ref name, modifiers, ref lines } => {
+                    let name = name.as_str();
                     if block_map.contains_key(name) {
                         let canonical = block_map.get_mut(name).unwrap();
 

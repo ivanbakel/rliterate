@@ -56,24 +56,85 @@ impl<'a> LinkedBlock<'a> {
 }
 
 #[derive(Clone)]
-pub struct LinkedLine<'a>(Vec<LinkPart<'a>>);
+pub struct LinkedLine<'a> {
+    parts: Vec<LinkPart>,
+    slices: Vec<&'a str>,
+}
 
 impl<'a> LinkedLine<'a> {
     fn get_links(&self) -> Vec<&'a str> {
-        let LinkedLine(parts) = self;
-        parts.iter().filter_map(|part| {
-            match part {
-                &LinkPart::Link(contents) => Some(contents),
-                _ => None
+        let mut links = Vec::new();
+
+        for i in 0..self.parts.len() {
+            if self.parts[i].is_link() {
+                links.push(self.slices[i]);
             }
-        }).collect()
+        }
+
+        links
+    }
+
+    pub fn split_links<'b>(&'b self) -> SplitLinks<'a, 'b> {
+        SplitLinks {
+            first: true, 
+            current_position: 0_usize,
+            parts: &self.parts[..],
+            slices: &self.slices[..],
+        }
     }
 }
 
 #[derive(Clone)]
-pub enum LinkPart<'a> {
-    Link(&'a str),
-    Text(&'a str),
+pub enum LinkPart {
+    Link,
+    Text,
+}
+
+impl LinkPart {
+    fn is_link(&self) -> bool {
+        match self {
+            &LinkPart::Link => true,
+            _ => false
+        }
+    }
+}
+
+type LinkInLine<'a, 'b> = (&'b [&'a str], &'a str, &'b [&'a str]);
+
+pub struct SplitLinks<'a : 'b, 'b> {
+    first : bool,
+    current_position: usize,
+    parts: &'b [LinkPart],
+    slices: &'b [&'a str],
+}
+
+impl<'a, 'b : 'a> Iterator for SplitLinks<'a, 'b> {
+    type Item = LinkInLine<'a, 'b>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        
+        // First iteration
+        if self.first {
+            self.current_position = 0;
+            self.first = false;
+        } else {
+            self.current_position += 1;
+        }
+
+        while self.current_position < self.parts.len() && !self.parts[self.current_position].is_link() {
+            self.current_position += 1;
+        }
+
+        if self.current_position >= self.slices.len() {
+            return None;
+        }
+        
+        Some((
+            &self.slices[0..self.current_position], 
+            self.slices[self.current_position], 
+            &self.slices[self.current_position..self.slices.len()]
+        ))
+    }
 }
 
 type LinkResult<T> = Result<T, LinkError>;
