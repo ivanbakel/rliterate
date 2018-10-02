@@ -27,7 +27,7 @@ impl From<io::Error> for OutputError {
 pub struct OutputSettings {
     out_dir: PathBuf,
     generate_output: bool,
-    weave: Option<weave::Type>,
+    weave: Option<weave::Settings>,
     tangle: Option<tangle::Settings>, 
 }
 
@@ -42,7 +42,9 @@ impl OutputSettings {
         let weave = if args.is_present("tangle") {
             None
         } else {
-            Some(weave::Type::StraightToHtml)
+            Some(weave::Settings {
+                weave_type: weave::Type::HtmlViaMarkdown(None),
+            })
         };
 
         let tangle = if args.is_present("weave") {
