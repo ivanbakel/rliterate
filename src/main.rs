@@ -20,7 +20,7 @@ fn main() -> Result<(), ProgramError> {
     
     let parse_state = parser::ParseState::from_input_path(input_path)?;
     
-    let linked_state = link::LinkState::link(&parse_state)?;
+    let linked_state = link::LinkState::link(&parse_state.file_map)?;
 
     let output_settings = output::OutputSettings::from_args(&args);
     output_settings.process(linked_state)?;

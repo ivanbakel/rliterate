@@ -23,9 +23,11 @@ pub enum ParseError {
 
 pub struct ParseState {    
     in_progress: HashSet<PathBuf>,
-    pub file_map: HashMap<PathBuf, LitFile>,
+    pub file_map: FileMap,
     pub css_settings: Option<CssSettings>,
 }
+
+pub type FileMap = HashMap<PathBuf, LitFile>;
 
 impl ParseState {
     pub fn new() -> Self {

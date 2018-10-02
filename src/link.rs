@@ -15,17 +15,17 @@ pub struct LinkState<'a> {
 }
 
 impl<'a> LinkState<'a> {
-    pub fn link(parse_state: &'a parser::ParseState) -> LinkResult<Self> {
-        let mut file_map = HashMap::new();
+    pub fn link(file_map: &'a parser::FileMap) -> LinkResult<Self> {
+        let mut linked_file_map = HashMap::new();
     
-        for (path, lit_file) in parse_state.file_map.iter() {
+        for (path, lit_file) in file_map.iter() {
             let linked_file = link_lit_file(lit_file)?;
     
-            file_map.insert(path, linked_file);
+            linked_file_map.insert(path, linked_file);
         }
     
         Ok(LinkState {
-            file_map: file_map,
+            file_map: linked_file_map,
         })
     }
 }
