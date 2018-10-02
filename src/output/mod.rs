@@ -44,6 +44,7 @@ impl OutputSettings {
         } else {
             Some(weave::Settings {
                 weave_type: weave::Type::HtmlViaMarkdown(None),
+                css: css::CssSettings::default(),
             })
         };
 
@@ -64,6 +65,12 @@ impl OutputSettings {
             generate_output: args.is_present("no_output"),
             weave: weave,
             tangle: tangle,
+        }
+    }
+
+    pub fn set_css(&mut self, settings: css::CssSettings) {
+        if let Some(ref mut weave) = self.weave {
+            weave.css = settings;
         }
     }
 

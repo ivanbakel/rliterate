@@ -7,6 +7,13 @@ impl CssSettings {
     pub fn is_default(&self) -> bool {
         !self.custom_css.is_not_none() && self.custom_colorscheme.is_none()
     }
+
+    pub fn default() -> Self {
+        CssSettings {
+            custom_css: CustomCss::None,
+            custom_colorscheme: None,
+        }
+    }
 }
 
 pub enum CustomCss {

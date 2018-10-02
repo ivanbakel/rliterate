@@ -1,4 +1,5 @@
 use output::{OutputResult};
+use output::css;
 use link::{LinkedFile, LinkedBlock, LinkedLine};
 
 use pulldown_cmark as cmark;
@@ -9,6 +10,7 @@ use std::fs;
 
 pub struct Settings {
     pub weave_type: Type,
+    pub css: css::CssSettings,
 }
 
 pub enum Type {
