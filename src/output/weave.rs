@@ -7,6 +7,8 @@ use pulldown_cmark as cmark;
 use std::borrow::{Cow};
 use std::path::{PathBuf};
 use std::fs;
+use std::io::{Write};
+use std::vec;
 
 pub struct Settings {
     pub weave_type: Type,
@@ -21,7 +23,7 @@ pub enum Type {
 pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>) -> OutputResult<()> {
     match settings.weave_type {
         Type::HtmlViaMarkdown(ref maybe_command) => {
-            let markdown = build_markdown(settings, file);
+            let markdown = MarkDown::build(settings, file);
 
             let mut html_filename = file_name.clone();
             html_filename.set_extension("html");
@@ -47,30 +49,36 @@ struct MarkDown<'m> {
     file_contents: Vec<cmark::Event<'m>>,
 }
 
-fn build_markdown<'a>(settings: &Settings, file: &'a LinkedFile<'a>) -> MarkDown<'a> {
-    let mut file_contents : Vec<cmark::Event<'a>> = vec![];
-
-    file_contents.append(&mut build_title(file.title));
+impl<'m> MarkDown<'m> {
+    fn build(settings: &Settings, file: &'m LinkedFile<'m>) -> Self {
+        let mut file_contents : Vec<cmark::Event<'m>> = vec![];
     
-    for section in file.sections.iter() {
-        file_contents.append(&mut build_section_header(settings, section.name));
-
-        for block in section.blocks.iter() {
-            match block {
-                &LinkedBlock::Code { ref name, ref lines, ..} => {
-                    file_contents.append(&mut build_code_block(settings, name, lines));
-                },
-                &LinkedBlock::Prose { ref lines } => {
-                    file_contents.append(&mut lines.iter().flat_map(|line| {
-                        cmark::Parser::new(line.get_text())
-                    }).collect());
-                },
+        file_contents.append(&mut build_title(file.title));
+        
+        for section in file.sections.iter() {
+            file_contents.append(&mut build_section_header(settings, section.name));
+    
+            for block in section.blocks.iter() {
+                match block {
+                    &LinkedBlock::Code { ref name, ref lines, ..} => {
+                        file_contents.append(&mut build_code_block(settings, name, lines));
+                    },
+                    &LinkedBlock::Prose { ref lines } => {
+                        file_contents.append(&mut lines.iter().flat_map(|line| {
+                            cmark::Parser::new(line.get_text())
+                        }).collect());
+                    },
+                }
             }
+        }
+    
+        MarkDown {
+            file_contents: file_contents,
         }
     }
 
-    MarkDown {
-        file_contents: file_contents,
+    fn into_iter(self) -> vec::IntoIter<cmark::Event<'m>> {
+        self.file_contents.into_iter()
     }
 }
 
@@ -107,5 +115,14 @@ fn call_markdown_compiler<'m>(command: &String, mut file: fs::File, markdown: Ma
 }
 
 fn compile_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
-   Ok(()) 
+    //TODO: Once the relevant pull request is merged on pulldown_cmark, change this to write
+    //directly to the file
+    
+    let mut compiled_html = String::new();
+
+    cmark::html::push_html(&mut compiled_html, markdown.into_iter());
+
+    file.write(&compiled_html.as_bytes())?;
+
+    Ok(())
 }
