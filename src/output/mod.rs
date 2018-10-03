@@ -14,6 +14,7 @@ use std::io;
 
 type OutputResult<T> = Result<T, OutputError>;
 
+#[derive(Debug)]
 pub enum OutputError {
     FileSystem(io::Error),
 }

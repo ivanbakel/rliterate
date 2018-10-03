@@ -33,26 +33,26 @@ fn main() -> Result<(), ProgramError> {
 
 #[derive(Debug)]
 enum ProgramError {
-    ParserError,
-    LinkerError,
-    OutputError
+    ParserError(parser::ParseError),
+    LinkerError(link::LinkError),
+    OutputError(output::OutputError),
 }
 
 impl From<parser::ParseError> for ProgramError {
     fn from(err: parser::ParseError) -> Self {
-        ProgramError::ParserError
+        ProgramError::ParserError(err)
     }
 }
 
 impl From<link::LinkError> for ProgramError {
     fn from(err: link::LinkError) -> Self {
-        ProgramError::LinkerError
+        ProgramError::LinkerError(err)
     }
 }
 
 impl From<output::OutputError> for ProgramError {
     fn from(err: output::OutputError) -> Self {
-        ProgramError::OutputError
+        ProgramError::OutputError(err)
     }
 }
 

@@ -146,6 +146,7 @@ impl<'a, 'b : 'a> Iterator for SplitLinks<'a, 'b> {
 
 type LinkResult<T> = Result<T, LinkError>;
 
+#[derive(Debug)]
 pub enum LinkError {
     InfiniteCodeLoop,
     BadLinkName,

@@ -6,10 +6,12 @@ pub use grammar::{BlockModifier};
 
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::io;
 use std::path::{Path, PathBuf};
 
 pub type ParseResult<T> = Result<T, ParseError>;
 
+#[derive(Debug)]
 pub enum ParseError {
     MissingCommand,
     DuplicateCommand,
@@ -18,7 +20,19 @@ pub enum ParseError {
     FileSystem,
     FileLoop,
     FileRepeat,
-    GrammarError,
+    GrammarError(grammar::ParseError),
+}
+
+impl From<grammar::ParseError> for ParseError {
+    fn from(err: grammar::ParseError) -> ParseError {
+        ParseError::GrammarError(err)
+    }
+}
+
+impl From<io::Error> for ParseError {
+    fn from(err: io::Error) -> ParseError {
+        ParseError::FileSystem
+    }
 }
 
 pub struct ParseState {    
@@ -55,8 +69,8 @@ impl ParseState {
             Err(ParseError::FileRepeat)
         } else {
             
-            let file_contents = fs::read_to_string(file_path).map_err(|_| ParseError::FileSystem)?; 
-            let lit_blocks = grammar::lit_file(&file_contents).map_err(|_| ParseError::GrammarError)?;
+            let file_contents = fs::read_to_string(file_path)?; 
+            let lit_blocks = grammar::lit_file(&file_contents)?;
             
             self.in_progress.insert(file_path.clone());
 
