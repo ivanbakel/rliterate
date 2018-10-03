@@ -1,6 +1,5 @@
 use parser;
-use ast::{LitFile, Section, Block};
-use grammar::{BlockModifier};
+use parser::{LitFile, Section, Block, BlockModifier};
 
 pub mod css;
 mod tangle;

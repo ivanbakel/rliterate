@@ -1,8 +1,10 @@
-use ast;
-pub use ast::{LitFile, Block};
+#[macro_use]
+mod ast;
+pub use self::ast::{LitFile, Section, Block};
+mod grammar;
+pub use self::grammar::{BlockModifier};
+
 use output::css::{CssSettings};
-use grammar;
-pub use grammar::{BlockModifier};
 
 use std::collections::{HashMap, HashSet};
 use std::fs;

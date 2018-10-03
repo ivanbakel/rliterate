@@ -6,9 +6,6 @@ extern crate peg;
 extern crate pulldown_cmark;
 
 mod args;
-mod grammar; 
-#[macro_use]
-mod ast;
 mod parser;
 pub mod link;
 mod output;

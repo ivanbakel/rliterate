@@ -1,5 +1,5 @@
 use parser::{ParseState, ParseResult, ParseError, get_input_file};
-use grammar::{LitBlock, CodeBlock, Command, BlockModifier};
+use parser::grammar::{LitBlock, CodeBlock, Command, BlockModifier};
 use output::css::{CustomCss, CssSettings};
 
 use std::path::{PathBuf};
