@@ -10,10 +10,10 @@ link_start = "@{"
 link_end = "}"
 
 text -> (LinkPart, &'input str)
-  = text:$((!link_start .)*) { (LinkPart::Text, text) }
+  = text:$((!link_start .)+) { (LinkPart::Text, text) }
 
 link -> (LinkPart, &'input str)
-  = link_start _ name:$(name) _ link_end { (LinkPart::Link, name) }
+  = link_start _? name:$(name) _? link_end { (LinkPart::Link, name) }
 
 pub link_line -> LinkedLine<'input>
   = parts:((text / link) *) { 

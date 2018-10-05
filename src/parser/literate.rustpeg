@@ -4,63 +4,62 @@ newline = "\n" / "\r\n" / !.
 
 whitespace = ' ' / '\t'
 
-_ = (whitespace) +
+// Optional whitespace
+_ = whitespace*
 
-non_whitespace = (!(whitespace / newline) .)+
+// Significant whitespace
+__ = whitespace+
+
+non_whitespace = (!(whitespace / newline) .)
 
 comment = "//" (!newline .)*
 
-line<contents> = contents _ comment? newline
+line<contents> = contents _ comment?
 
-named_line<contents> = this:contents _ comment? newline { this }
+named_line<contents> = this:contents _ comment? { this }
+
+line_slice -> &'input str 
+  = $((!newline .)+)
 
 /// Commands
 
 arg_separator = "---"
 
 name -> &'input str
-   = $(non_whitespace (_ !arg_separator non_whitespace)*)
-
-identifier -> &'input str
-  = $([A-Za-z_-]+)
-
-css_file -> &'input str
-  = filename:identifier ".css"? { filename }
+  = $(((!arg_separator non_whitespace)+) ++ (__))
 
 file_extension -> &'input str
   = $("." [A_Za-z_-]+)
 
 comment_pattern -> &'input str
-  = $(non_whitespace ++ _)
+  = line_slice
 
 error_pattern -> &'input str
-  = $(non_whitespace ++ _)
+  = line_slice
 
 shell_command -> &'input str
-  = $(non_whitespace ++ _)
+  = line_slice
+
+css_file -> &'input str
+  = line_slice
 
 a_command -> Command<'input>
-  = "title" _ title:name { Command::Title(title) }
-  / "s" _ section_name:(name?) { Command::Section(section_name) }
-  / "code_type" _ ctype:identifier _ extension:file_extension 
+  = "title" __ title:name { Command::Title(title) }
+  / "s" __ section_name:(name?) { Command::Section(section_name) }
+  / "code_type" __ ctype:$([A-Za-z_-]+) _ extension:file_extension 
     { Command::CodeType { code_type: ctype, file_extension: extension } }
-  / "comment_type" _ pattern:comment_pattern { Command::CommentType(pattern) }
-  / "compiler" _ sh_command:shell_command { Command::Compiler(sh_command) }
-  / "error_format" _ err_format:error_pattern { Command::ErrorFormat(err_format) }
-  / "book" _ { Command::Book }
-  / "add_css" _ file:css_file { Command::AddCss(file) }
-  / "overwrite_css" _ file:css_file { Command::OverwriteCss(file) }
-  / "colorscheme" _ file:css_file { Command::Colorscheme(file) }
+  / "comment_type" __ pattern:comment_pattern { Command::CommentType(pattern) }
+  / "compiler" __ sh_command:shell_command { Command::Compiler(sh_command) }
+  / "error_format" __ err_format:error_pattern { Command::ErrorFormat(err_format) }
+  / "book" __ { Command::Book }
+  / "add_css" __ file:css_file { Command::AddCss(file) }
+  / "overwrite_css" __ file:css_file { Command::OverwriteCss(file) }
+  / "colorscheme" __ file:css_file { Command::Colorscheme(file) }
 
 command -> Command<'input>
-  = "@" a_command:a_command { a_command }
+  = named_line<"@" a_command:a_command { a_command }>
 
 /// Code blocks
-
-code_line -> &'input str
-  = !codeblock_delim line:$((!newline .)*) { line }
-code -> Vec<&'input str>
-  = (line:code_line newline { line })*
 
 codeblock_delim = "---"
 
@@ -70,7 +69,8 @@ block_name -> &'input str
 block_modifier -> BlockModifier
   = append
   / redef
-  / arg_separator _ mods:(block_mods ++ _) { mods.into_iter().fold(BlockModifier::empty(), |set, flag| set | flag) }
+  / arg_separator _ mods:(block_mods ++ __) { mods.into_iter().fold(BlockModifier::empty(), |set, flag| set | flag) }
+  / _ { BlockModifier::empty() }
 
 block_mods -> BlockModifier
   = append  
@@ -84,39 +84,42 @@ redef -> BlockModifier
   = "-=" { BlockModifier::Redef }
 
 codeblock_header -> (&'input str, BlockModifier)
-   = codeblock_delim _? name:block_name _? mods:block_modifier { (name, mods) }
-
-codeblock -> CodeBlock<'input>
-  = header:named_line<codeblock_header> contents:code line<codeblock_delim> {
-      let (block_name, modifiers) = header;
-      CodeBlock { block_name, modifiers, contents }
-  }
+   = named_line<codeblock_delim _ name:block_name _ mods:block_modifier { (name, mods) }>
 
 /// Prose
 
-block_spacing = (line<whitespace>)+
-
 prose -> &'input str
-  = $((!codeblock_header !command) (non_whitespace ++ _))
+  = $((!(newline / "//") .)*)
 
-prose_block -> Vec<&'input str>
-  = (named_line<prose> ++ block_spacing)
+prose_line -> &'input str
+  = named_line<prose>
 
 /// Chapter links
+
+chapter_file -> &'input str
+  = $((!"(" .)+)
+
 chapter -> (&'input str, &'input str)
-  = "[" _ title:name _ "](" filename:identifier ".lit"? ")" { (title, filename) }
+  = "[" _ title:name _ "](" filename:chapter_file ")" { (title, filename) }
 
 /// The whole file
 
-lit_block -> LitBlock<'input>
-  = command:named_line<command> { LitBlock::Command(command) }
-  / chapter:named_line<chapter> { 
-      let (title, filename) = chapter;
-      LitBlock::Chapter { title: title, file_name: filename }
-  }
-  / codeblock:codeblock { LitBlock::Code(codeblock) }
-  / prose:prose_block { LitBlock::Prose(prose) }
+pub partial_line -> PartialLitLine<'input>
+  = block_header:codeblock_header { 
+      let (block_name, mods) = block_header;
+      PartialLitLine::CodeBlockStart(block_name, mods)
+    }
+  / line<codeblock_delim> { PartialLitLine::CodeBlockEnd }
+  / line:(line_slice / $("")) { PartialLitLine::Line(line) }
 
-pub lit_file -> Vec<LitBlock<'input>>
-  = (lit_block ++ block_spacing)
+pub lit_line -> LitLine<'input>
+  = command:command { LitLine::Command(command) }
+  / chapter:named_line<chapter> {
+      let (title, file) = chapter;
+      LitLine::Chapter {
+          title: title, 
+          file_name: file,
+      }
+    }
+  / prose:prose_line { LitLine::Prose(prose) }
 

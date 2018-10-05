@@ -28,7 +28,7 @@ mod macros {
     macro_rules! require {
         ( $($variable:ident),* ) => {
             $(
-                let $variable = $variable.ok_or(ParseError::MissingCommand)?;
+                let $variable = $variable.ok_or(ParseError::MissingCommand(stringify!($variable)))?;
             )*
         };
     }
@@ -38,7 +38,7 @@ pub struct LitFile {
     pub title: String,
     pub code_type: String,
     pub file_extension: String,
-    pub comment_type: &'static Fn(String) -> String,
+    pub comment_type: Option<&'static Fn(String) -> String>,
     pub sections: Vec<Section>,
     pub compiler: Option<CompilerSettings>,
     pub book_status: BookStatus,
@@ -134,7 +134,7 @@ impl LitFile {
         sections.push(current_section);
     
         // Error if required fields haven't been populated
-        require!(title, code_type_and_file_extension, comment_type);
+        require!(title, code_type_and_file_extension);
 
         // Generate the book status
         let book_status = if is_book || !chapters.is_empty() {

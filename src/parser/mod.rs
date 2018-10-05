@@ -15,7 +15,7 @@ pub type ParseResult<T> = Result<T, ParseError>;
 
 #[derive(Debug)]
 pub enum ParseError {
-    MissingCommand,
+    MissingCommand(&'static str),
     DuplicateCommand,
     DuplicateCssCommand,
     ConflictingCss,

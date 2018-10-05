@@ -34,7 +34,7 @@ type LinkMap<'a> = HashMap<&'a str, Vec<&'a str>>;
 
 pub struct LinkedFile<'a> {
     pub title: &'a str,
-    pub comment_type: &'static Fn(String) -> String,
+    pub comment_type: Option<&'static Fn(String) -> String>,
     pub sections: Vec<LinkedSection<'a>>,
 }
 
@@ -139,7 +139,7 @@ impl<'a, 'b : 'a> Iterator for SplitLinks<'a, 'b> {
         Some((
             &self.slices[0..self.current_position], 
             self.slices[self.current_position], 
-            &self.slices[self.current_position..self.slices.len()]
+            &self.slices[self.current_position+1..self.slices.len()]
         ))
     }
 }
