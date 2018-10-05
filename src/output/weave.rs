@@ -25,10 +25,10 @@ pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFil
         Type::HtmlViaMarkdown(ref maybe_command) => {
             let markdown = MarkDown::build(settings, file);
 
-            let mut html_filename = file_name.clone();
+            let mut html_filename = out_dir.join(file_name.file_stem().unwrap());
             html_filename.set_extension("html");
 
-            let html_file = fs::OpenOptions::new().write(true).open(out_dir.join(html_filename))?;
+            let html_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(html_filename)?;
 
             if let Some(ref command) = maybe_command {
                 call_markdown_compiler(command, html_file, markdown)

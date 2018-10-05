@@ -13,7 +13,7 @@ pub fn tangle_file<'a>(settings: &Settings, file: &LinkedFile<'a>, out_dir: &Pat
 
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
-        let to_file = fs::OpenOptions::new().write(true).open(out_dir.join(name))?;
+        let to_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(out_dir.join(name))?;
 
         settings.print_file(to_file, name, block, &canonical_code_blocks)?;
     }
@@ -46,7 +46,7 @@ impl Settings {
                        prependix: Vec<&'a str>,
                        appendix: Vec<&'a str>) -> OutputResult<()> {
         if block.print_header {
-            Self::print_line(file, &prependix[..], name, &appendix[..]);
+            Self::print_line(file, &prependix[..], &format!("// {}", name), &appendix[..]);
         }
 
         for line in block.contents.iter() {
@@ -65,7 +65,7 @@ impl Settings {
             }
 
             if !printed_link {
-                Self::print_line(file, &prependix[..], name, &appendix[..]);
+                Self::print_line(file, &prependix[..], line.get_text(), &appendix[..]);
             }
         }
 
@@ -168,7 +168,7 @@ fn canonicalise_code_blocks<'a>(sections: &[LinkedSection<'a>]) -> BlockMap<'a> 
                             canonical.append_lines(lines);
                         }
                     } else {
-                        let form = if Path::new(name).is_file() {
+                        let form = if Path::new(name).extension().is_some() {
                             CCBForm::File
                         } else {
                             CCBForm::Block
