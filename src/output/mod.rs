@@ -2,6 +2,7 @@ use parser;
 use parser::{LitFile, Section, Block, BlockModifier};
 
 pub mod css;
+mod canon;
 mod tangle;
 mod weave;
 use super::link;
