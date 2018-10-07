@@ -1,8 +1,10 @@
-use output::{OutputResult};
+use output::{OutputResult, OutputError};
 use output::css;
 use link::{LinkedFile, LinkedBlock, LinkedLine};
 
 use pulldown_cmark as cmark;
+use prettify_cmark;
+use subprocess;
 
 use std::borrow::{Cow};
 use std::path::{PathBuf, Path};
@@ -110,8 +112,32 @@ fn build_code_block<'a>(settings: &Settings, name: &'a str, lines: &'a [LinkedLi
     code_block
 }
 
-fn call_markdown_compiler<'m>(command: &String, mut file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
-    Ok(())
+impl From<subprocess::PopenError> for OutputError {
+    fn from(err: subprocess::PopenError) -> OutputError {
+        OutputError::BadCommand(err)
+    }
+}
+
+fn call_markdown_compiler<'m>(command: &str, file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
+    // Setup the markdown to be fed into the command
+    let mut printed_markdown = String::new();
+    
+    {
+        let mut pretty_printer = prettify_cmark::PrettyPrinter::new(&mut printed_markdown);
+        pretty_printer.push_events(markdown.file_contents.into_iter()).unwrap();
+    }
+    
+    let process_result = subprocess::Exec::shell(command)
+        .stdin(printed_markdown.as_str())
+        .stdout(file)
+        .join()?;
+
+    match process_result {
+        subprocess::ExitStatus::Exited(0) => Ok(()),
+        subprocess::ExitStatus::Exited(code) => Err(OutputError::FailedCommand(code)),
+        subprocess::ExitStatus::Signaled(signal) => Err(OutputError::TerminatedCommand(signal)),
+        _ => unreachable!(),
+    }
 }
 
 fn compile_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {

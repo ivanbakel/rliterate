@@ -8,6 +8,7 @@ mod weave;
 use super::link;
 
 use clap::{ArgMatches};
+use subprocess::{PopenError};
 use std::path::{Path, PathBuf};
 use std::env;
 use std::io;
@@ -17,6 +18,9 @@ type OutputResult<T> = Result<T, OutputError>;
 #[derive(Debug)]
 pub enum OutputError {
     FileSystem(io::Error),
+    BadCommand(PopenError),
+    FailedCommand(u32),
+    TerminatedCommand(u8),
 }
 
 impl From<io::Error> for OutputError {

@@ -4,6 +4,8 @@ extern crate bitflags;
 extern crate clap;
 extern crate peg;
 extern crate pulldown_cmark;
+extern crate prettify_cmark;
+extern crate subprocess;
 
 mod args;
 mod parser;
