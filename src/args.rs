@@ -7,6 +7,7 @@ pub fn get_arg_parser() -> App<'static, 'static> {
         .version(crate_version!())
         .arg(
             Arg::with_name("input")
+            .help("The input file or directory. If a directory is given, all the .lit files in it will be processed")
             .index(1)
             .required(true))
         .arg(
