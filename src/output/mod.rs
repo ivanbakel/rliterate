@@ -2,7 +2,9 @@ pub mod css;
 mod canon;
 mod tangle;
 mod weave;
+
 use super::link;
+use super::args;
 
 use clap::{ArgMatches};
 use subprocess::{PopenError};
@@ -39,22 +41,22 @@ pub struct OutputSettings {
 
 impl OutputSettings {
     pub fn from_args(args: &ArgMatches<'static>) -> OutputResult<Self> {
-        let output_dir = args.value_of("output_directory")
+        let output_dir = args.value_of(args::output_directory)
             .map_or(
                 env::current_dir().unwrap(),
                 |odir| Path::new(odir).to_path_buf()
             );
 
-        let weave = if args.is_present("tangle") {
+        let weave = if args.is_present(args::tangle) {
             None
         } else {
-            let md_compiler = args.value_of("md_compiler")
+            let md_compiler = args.value_of(args::md_compiler)
                 .map(|contents| contents.to_owned());
 
-            let weave_type = if let Some(weave_output_type) = args.value_of("weave_output") {
+            let weave_type = if let Some(weave_output_type) = args.value_of(args::weave_output) {
                 match weave_output_type {
-                    "markdown" | "md" => weave::Type::Markdown,
-                    "html" => weave::Type::HtmlViaMarkdown(md_compiler),
+                    args::markdown | args::md => weave::Type::Markdown,
+                    args::html => weave::Type::HtmlViaMarkdown(md_compiler),
                     _ => return Err(OutputError::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
                 }
             } else {
@@ -67,21 +69,21 @@ impl OutputSettings {
             })
         };
 
-        let tangle = if args.is_present("weave") {
+        let tangle = if args.is_present(args::weave) {
             None
         } else {
-            let line_numbers = args.value_of("line_numbers")
+            let line_numbers = args.value_of(args::line_numbers)
                 .map(|format_string| generate_line_numbers(format_string));
 
             Some(tangle::Settings {
-                compile: args.is_present("compiler"),
+                compile: args.is_present(args::compiler),
                 line_numbers: line_numbers,
             })
         };
 
         Ok(OutputSettings {
             out_dir: output_dir,
-            generate_output: args.is_present("no_output"),
+            generate_output: args.is_present(args::no_output),
             weave: weave,
             tangle: tangle,
         })

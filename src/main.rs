@@ -15,7 +15,7 @@ mod output;
 fn main() -> Result<(), ProgramError> {
     let args : clap::ArgMatches<'static> = args::get_arg_parser().get_matches();
 
-    let input_path = args.value_of("input").unwrap();
+    let input_path = args.value_of(args::input).unwrap();
     
     let parse_state = parser::ParseState::from_input_path(input_path)?;
     

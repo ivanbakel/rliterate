@@ -6,62 +6,76 @@ pub fn get_arg_parser() -> App<'static, 'static> {
         .before_help("Consult the `literate` docs for information about the .lit format.")
         .version(crate_version!())
         .arg(
-            Arg::with_name("input")
+            Arg::with_name(input)
             .help("The input file or directory. If a directory is given, all the .lit files in it will be processed")
             .index(1)
             .required(true))
         .arg(
-            Arg::with_name("no_output")
+            Arg::with_name(no_output)
             .help("Don't produce any output files.")
             .short("no")
             .long("no-output")
             .required(false))
         .arg(
-            Arg::with_name("compiler")
+            Arg::with_name(compiler)
             .help("Run any compiler commands for linting the code output.")
             .short("c")
             .long("compiler")
             .required(false)
-            .conflicts_with("weave"))
+            .conflicts_with(weave))
         .arg(
-            Arg::with_name("output_directory")
+            Arg::with_name(output_directory)
             .help("The directory to write generated files to.")
             .short("odir")
             .long("out-dir")
             .required(false)
             .takes_value(true))
         .arg(
-            Arg::with_name("line_numbers")
+            Arg::with_name(line_numbers)
             .help("Set the format string for line numbers in the code output")
             .short("l")
             .long("linenums")
             .required(false)
             .takes_value(true))
         .arg(
-            Arg::with_name("tangle")
+            Arg::with_name(tangle)
             .help("Only produce the code output.")
             .short("t")
             .long("tangle"))
         .arg(
-            Arg::with_name("weave")
+            Arg::with_name(weave)
             .help("Only produce the documentation output.")
             .short("w")
             .long("weave"))
-        .arg(Arg::with_name("weave_output")
+        .arg(Arg::with_name(weave_output)
              .help("Set the type of documentation output - valid options are markdown and html.")
              .long("weave-output")
              .required(false)
              .takes_value(true)
-             .conflicts_with("tangle"))
-        .arg(Arg::with_name("md_compiler")
+             .conflicts_with(tangle))
+        .arg(Arg::with_name(md_compiler)
              .help("Set the markdown compiler used to generate html output.")
              .long("markdown-compiler")
              .required(false)
              .takes_value(true)
-             .conflicts_with("tangle"))
+             .conflicts_with(tangle))
         .group(
-            ArgGroup::with_name("output_type")
-            .args(&["tangle", "weave"])
+            ArgGroup::with_name(output_type)
+            .args(&[tangle, weave])
             .required(false)
             .multiple(false))
 }
+
+pub const input : &'static str = "input";
+pub const no_output : &'static str = "no_output";
+pub const compiler : &'static str = "compiler";
+pub const output_directory : &'static str = "output_directory";
+pub const line_numbers : &'static str = "line_numbers";
+pub const tangle : &'static str = "tangle";
+pub const weave : &'static str = "weave";
+pub const weave_output : &'static str = "weave_output";
+pub const html : &'static str = "html";
+pub const md : &'static str = "md";
+pub const markdown : &'static str = "markdown";
+pub const md_compiler : &'static str = "md_compiler";
+pub const output_type : &'static str = "output_type";
