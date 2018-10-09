@@ -38,8 +38,17 @@ pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFil
                 compile_markdown(html_file, markdown)
             }
         },
-        _ => {
-            panic!()
+        Type::Markdown => {
+            let markdown = MarkDown::build(settings, file);
+
+            let mut md_filename = out_dir.join(file_name.file_stem().unwrap());
+            md_filename.set_extension("md");
+
+            let md_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(md_filename)?;
+
+            print_markdown(md_file, markdown);
+
+            Ok(())
         }
     }
 }
@@ -150,5 +159,12 @@ fn compile_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputRes
 
     file.write(&compiled_html.as_bytes())?;
 
+    Ok(())
+}
+
+fn print_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
+    let mut pretty_printer = prettify_cmark::PrettyPrinter::new(String::new());
+    pretty_printer.push_events(markdown.file_contents.into_iter()).unwrap();
+    write!(file, "{}", pretty_printer.into_inner());
     Ok(())
 }
