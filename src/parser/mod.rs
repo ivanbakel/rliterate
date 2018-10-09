@@ -1,6 +1,6 @@
 #[macro_use]
 mod ast;
-pub use self::ast::{LitFile, Section, Block};
+pub use self::ast::{LitFile, Section, Block, CompilerSettings};
 mod grammar;
 pub use self::grammar::{BlockModifier};
 

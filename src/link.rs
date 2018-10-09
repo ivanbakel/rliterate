@@ -1,5 +1,5 @@
 use parser;
-use parser::{LitFile, Block, BlockModifier};
+use parser::{LitFile, Block, BlockModifier, CompilerSettings};
 
 use std::collections::{HashMap};
 use std::path::{PathBuf};
@@ -37,6 +37,7 @@ pub struct LinkedFile<'a> {
     pub code_type: &'a str,
     pub comment_type: Option<&'static Fn(String) -> String>,
     pub sections: Vec<LinkedSection<'a>>,
+    pub compiler: &'a Option<CompilerSettings>
 }
 
 pub struct LinkedSection<'a> {
@@ -186,6 +187,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
         code_type: &lit_file.code_type,
         comment_type: lit_file.comment_type,
         sections: linked_sections,
+        compiler: &lit_file.compiler,
     })
 }
 

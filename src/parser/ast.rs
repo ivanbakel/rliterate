@@ -167,7 +167,7 @@ pub enum BookStatus {
 }
 
 pub struct CompilerSettings {
-    command: String,
+    pub command: String,
     formatter: &'static Fn(String, String, String, String) -> String
 }
 

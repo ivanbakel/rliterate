@@ -21,6 +21,9 @@ pub enum OutputError {
     BadCommand(PopenError),
     FailedCommand(u32),
     TerminatedCommand(u8),
+    NoCompilerCommand,
+    FailedCompiler(u32),
+    TerminatedCompiler(u8),
 }
 
 impl From<io::Error> for OutputError {
