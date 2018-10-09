@@ -47,7 +47,7 @@ pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file
 
             let md_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(md_filename)?;
 
-            print_markdown(md_file, markdown);
+            print_markdown(md_file, markdown)?;
 
             Ok(())
         }
