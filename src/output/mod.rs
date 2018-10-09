@@ -83,12 +83,14 @@ impl OutputSettings {
         for (path, linked_file) in link_state.file_map.iter() {
             let canonical_code_blocks = canon::canonicalise_code_blocks(&linked_file.sections[..]);
 
-            if let Some(ref settings) = self.tangle {
-                tangle::tangle_blocks(settings, &canonical_code_blocks, &self.out_dir, &linked_file.compiler)?;
-             }
+            if self.generate_output {
+                if let Some(ref settings) = self.tangle {
+                    tangle::tangle_blocks(settings, &canonical_code_blocks, &self.out_dir, &linked_file.compiler)?;
+                }
 
-            if let Some(ref weave_type) = self.weave {
-                weave::weave_file_with_blocks(weave_type, path, linked_file, &canonical_code_blocks, &self.out_dir)?;
+                if let Some(ref weave_type) = self.weave {
+                    weave::weave_file_with_blocks(weave_type, path, linked_file, &canonical_code_blocks, &self.out_dir)?;
+                }
             }
         }
 
