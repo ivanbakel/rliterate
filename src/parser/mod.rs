@@ -19,7 +19,7 @@ pub enum ParseError {
     DuplicateCommand,
     DuplicateCssCommand,
     ConflictingCss,
-    FileSystem,
+    FileSystem(io::Error),
     FileLoop,
     FileRepeat,
     GrammarError(grammar::ParseError),
@@ -33,7 +33,7 @@ impl From<grammar::ParseError> for ParseError {
 
 impl From<io::Error> for ParseError {
     fn from(err: io::Error) -> ParseError {
-        ParseError::FileSystem
+        ParseError::FileSystem(err)
     }
 }
 
@@ -93,13 +93,12 @@ fn get_input_files(input_path: &str) -> ParseResult<Vec<PathBuf>> {
     if path_buf.is_file() {
         Ok(vec![path_buf])
     } else if path_buf.is_dir() {
-        let files = fs::read_dir(path_buf).
-            map_err(|_| ParseError::FileSystem)?;
+        let files = fs::read_dir(path_buf)?;
 
         let mut paths = Vec::new();
 
         for entry in files {
-            let dir_entry = entry.map_err(|_| ParseError::FileSystem)?;
+            let dir_entry = entry?;
 
             let entry_path = dir_entry.path();
 
@@ -110,7 +109,7 @@ fn get_input_files(input_path: &str) -> ParseResult<Vec<PathBuf>> {
 
         Ok(paths)
     } else {
-        Err(ParseError::FileSystem)
+        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Could not process input path: {}", input_path))))
     }
 }
 
@@ -120,6 +119,6 @@ pub fn get_input_file(input_path: &str) -> ParseResult<PathBuf> {
     if path_buf.is_file() {
         Ok(path_buf)
     } else {
-        Err(ParseError::FileSystem)
+        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Input path was not a file: {}", input_path))))
     }
 }
