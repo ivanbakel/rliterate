@@ -1,12 +1,9 @@
 use parser::{CompilerSettings};
 use output::{OutputResult, OutputError};
-use output::canon;
 use output::canon::{CanonicalCodeBlock, BlockMap};
-use link::{LinkedFile};
 
 use subprocess;
 
-use std::collections::{HashMap};
 use std::path::{Path};
 use std::fs;
 use std::io::{Write};

@@ -1,5 +1,4 @@
 use parser::{BlockModifier};
-use link;
 use link::{LinkedSection, LinkedBlock, LinkedLine};
 
 use std::collections::{HashMap};
