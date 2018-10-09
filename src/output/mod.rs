@@ -47,8 +47,22 @@ impl OutputSettings {
         let weave = if args.is_present("tangle") {
             None
         } else {
+            let md_compiler = args.value_of("md_compiler")
+                .map(|contents| contents.to_owned());
+
+            let weave_type = if let Some(weave_output_type) = args.value_of("weave_output") {
+                match weave_output_type {
+                    "markdown" | "md" => weave::Type::Markdown,
+                    "html" => weave::Type::HtmlViaMarkdown(md_compiler),
+                    // TODO: Error out gracefully
+                    _ => panic!(),
+                }
+            } else {
+                weave::Type::HtmlViaMarkdown(md_compiler)
+            };
+
             Some(weave::Settings {
-                weave_type: weave::Type::HtmlViaMarkdown(None),
+                weave_type: weave_type,
                 css: css::CssSettings::default(),
             })
         };
