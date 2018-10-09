@@ -50,11 +50,13 @@ pub fn get_arg_parser() -> App<'static, 'static> {
              .help("Set the type of documentation output - valid options are markdown and html.")
              .long("weave-output")
              .required(false)
+             .takes_value(true)
              .conflicts_with("tangle"))
         .arg(Arg::with_name("md_compiler")
              .help("Set the markdown compiler used to generate html output.")
              .long("markdown-compiler")
              .required(false)
+             .takes_value(true)
              .conflicts_with("tangle"))
         .group(
             ArgGroup::with_name("output_type")
