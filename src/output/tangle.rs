@@ -11,9 +11,10 @@ use std::path::{Path};
 use std::fs;
 use std::io::{Write};
 
-pub fn tangle_file<'a>(settings: &Settings, file: &LinkedFile<'a>, out_dir: &Path) -> OutputResult<()> {
-    let canonical_code_blocks = canon::canonicalise_code_blocks(&file.sections[..]);
-
+pub fn tangle_blocks<'a>(settings: &Settings, 
+                         canonical_code_blocks: &BlockMap, 
+                         out_dir: &Path,
+                         compiler: &'a Option<CompilerSettings>) -> OutputResult<()> {
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
         let output_file_path = out_dir.join(name);
@@ -22,7 +23,7 @@ pub fn tangle_file<'a>(settings: &Settings, file: &LinkedFile<'a>, out_dir: &Pat
         // compiling
         if settings.compile {
             //Compile the file
-            settings.compile_file(file.compiler)?;
+            settings.compile_file(compiler)?;
         } else {
             // Print the file out
             let to_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(&output_file_path)?;

@@ -37,7 +37,8 @@ pub struct LinkedFile<'a> {
     pub code_type: &'a str,
     pub comment_type: Option<&'static Fn(String) -> String>,
     pub sections: Vec<LinkedSection<'a>>,
-    pub compiler: &'a Option<CompilerSettings>
+    pub compiler: &'a Option<CompilerSettings>,
+    pub link_map: LinkMap<'a>,
 }
 
 pub struct LinkedSection<'a> {
@@ -188,6 +189,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
         comment_type: lit_file.comment_type,
         sections: linked_sections,
         compiler: &lit_file.compiler,
+        link_map: link_map,
     })
 }
 

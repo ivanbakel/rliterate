@@ -1,5 +1,6 @@
 use output::{OutputResult, OutputError};
 use output::css;
+use output::canon::{BlockMap};
 use link::{LinkedFile, LinkedBlock, LinkedLine};
 
 use pulldown_cmark as cmark;
@@ -22,10 +23,10 @@ pub enum Type {
     HtmlViaMarkdown(Option<String>),
 }
 
-pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>, out_dir: &Path) -> OutputResult<()> {
+pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>, block_map: &BlockMap, out_dir: &Path) -> OutputResult<()> {
     match settings.weave_type {
         Type::HtmlViaMarkdown(ref maybe_command) => {
-            let markdown = MarkDown::build(settings, file);
+            let markdown = MarkDown::build(settings, file, block_map);
 
             let mut html_filename = out_dir.join(file_name.file_stem().unwrap());
             html_filename.set_extension("html");
@@ -39,7 +40,7 @@ pub fn weave_file<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFil
             }
         },
         Type::Markdown => {
-            let markdown = MarkDown::build(settings, file);
+            let markdown = MarkDown::build(settings, file, block_map);
 
             let mut md_filename = out_dir.join(file_name.file_stem().unwrap());
             md_filename.set_extension("md");
@@ -61,7 +62,7 @@ struct MarkDown<'m> {
 }
 
 impl<'m> MarkDown<'m> {
-    fn build(settings: &Settings, file: &'m LinkedFile<'m>) -> Self {
+    fn build(settings: &Settings, file: &'m LinkedFile<'m>, block_map: &'m BlockMap) -> Self {
         let mut file_contents : Vec<cmark::Event<'m>> = vec![];
     
         file_contents.append(&mut build_title(file.title));
@@ -72,7 +73,7 @@ impl<'m> MarkDown<'m> {
             for block in section.blocks.iter() {
                 match block {
                     &LinkedBlock::Code { ref name, ref lines, ..} => {
-                        file_contents.append(&mut build_code_block(settings, name, lines, &file.code_type));
+                        file_contents.append(&mut build_code_block(settings, name, lines, block_map, &file.code_type));
                     },
                     &LinkedBlock::Prose { ref lines } => {
                         file_contents.append(&mut lines.iter().flat_map(|line| {
@@ -109,14 +110,18 @@ fn build_section_header<'a>(settings: &Settings, name: &'a str) -> Vec<cmark::Ev
     ]
 }
 
-fn build_code_block<'a>(settings: &Settings, name: &'a str, lines: &'a [LinkedLine<'a>], code_type: &'a str) -> Vec<cmark::Event<'a>> {
+fn build_code_block<'a>(settings: &Settings, name: &'a str, lines: &'a [LinkedLine<'a>], block_map: &'a BlockMap, code_type: &'a str) -> Vec<cmark::Event<'a>> {
     let mut code_block : Vec<cmark::Event<'a>> = vec![];
 
     code_block.push(cmark::Event::Start(cmark::Tag::CodeBlock(Cow::Borrowed(code_type))));
-    code_block.append(&mut lines.iter().map(|line| {
-        cmark::Event::Text(Cow::Borrowed(line.get_text()))
+    code_block.append(&mut lines.iter().flat_map(|line| {
+        vec![
+            cmark::Event::Text(Cow::Borrowed(line.get_text())),
+            cmark::Event::SoftBreak,
+        ]
     }).collect());
     code_block.push(cmark::Event::End(cmark::Tag::CodeBlock(Cow::Borrowed(code_type))));
+    code_block.push(cmark::Event::SoftBreak);
 
     code_block
 }

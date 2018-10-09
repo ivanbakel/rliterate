@@ -12,7 +12,7 @@ pub struct CanonicalCodeBlock<'a> {
     print_to_weave: bool,
     form: CCBForm,
     contents: Vec<LinkedLine<'a>>,
-    first_defined_in: &'a str,
+    pub first_defined_in: &'a str,
     appended_to_in: Vec<&'a str>,
     redefined_in: Vec<&'a str>,
 }
