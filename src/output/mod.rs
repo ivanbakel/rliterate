@@ -14,6 +14,7 @@ type OutputResult<T> = Result<T, OutputError>;
 
 #[derive(Debug)]
 pub enum OutputError {
+    BadCLIArgument(String),
     FileSystem(io::Error),
     BadCommand(PopenError),
     FailedCommand(u32),
@@ -37,7 +38,7 @@ pub struct OutputSettings {
 }
 
 impl OutputSettings {
-    pub fn from_args(args: &ArgMatches<'static>) -> Self {
+    pub fn from_args(args: &ArgMatches<'static>) -> OutputResult<Self> {
         let output_dir = args.value_of("output_directory")
             .map_or(
                 env::current_dir().unwrap(),
@@ -54,8 +55,7 @@ impl OutputSettings {
                 match weave_output_type {
                     "markdown" | "md" => weave::Type::Markdown,
                     "html" => weave::Type::HtmlViaMarkdown(md_compiler),
-                    // TODO: Error out gracefully
-                    _ => panic!(),
+                    _ => return Err(OutputError::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
                 }
             } else {
                 weave::Type::HtmlViaMarkdown(md_compiler)
@@ -79,12 +79,12 @@ impl OutputSettings {
             })
         };
 
-        OutputSettings {
+        Ok(OutputSettings {
             out_dir: output_dir,
             generate_output: args.is_present("no_output"),
             weave: weave,
             tangle: tangle,
-        }
+        })
     }
 
     pub fn set_css(&mut self, settings: css::CssSettings) {

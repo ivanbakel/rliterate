@@ -21,7 +21,7 @@ fn main() -> Result<(), ProgramError> {
     
     let linked_state = link::LinkState::link(&parse_state.file_map)?;
 
-    let mut output_settings = output::OutputSettings::from_args(&args);
+    let mut output_settings = output::OutputSettings::from_args(&args)?;
     if let Some(css_settings) = parse_state.css_settings {
         output_settings.set_css(css_settings);
     }
