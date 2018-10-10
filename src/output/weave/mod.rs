@@ -34,11 +34,13 @@ pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file
 
             let html_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(html_filename)?;
 
-            if let Some(ref command) = maybe_command {
-                call_markdown_compiler(command, html_file, markdown)
+            let compiled_markdown = if let Some(ref command) = maybe_command {
+                call_markdown_compiler(command, markdown)
             } else {
-                compile_markdown(html_file, markdown)
-            }
+                compile_markdown(markdown)
+            }?;
+
+            Ok(())
         },
         Type::Markdown => {
             let markdown = MarkDown::build(settings, file, block_map);
@@ -61,7 +63,7 @@ impl From<subprocess::PopenError> for OutputError {
     }
 }
 
-fn call_markdown_compiler<'m>(command: &str, file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
+fn call_markdown_compiler<'m>(command: &str, markdown: MarkDown<'m>) -> OutputResult<String> {
     // Setup the markdown to be fed into the command
     let mut printed_markdown = String::new();
     
@@ -72,18 +74,18 @@ fn call_markdown_compiler<'m>(command: &str, file: fs::File, markdown: MarkDown<
     
     let process_result = subprocess::Exec::shell(command)
         .stdin(printed_markdown.as_str())
-        .stdout(file)
-        .join()?;
+        .stdout(subprocess::Redirection::Pipe)
+        .capture()?;
 
-    match process_result {
-        subprocess::ExitStatus::Exited(0) => Ok(()),
+    match process_result.exit_status {
+        subprocess::ExitStatus::Exited(0) => Ok(process_result.stdout_str()),
         subprocess::ExitStatus::Exited(code) => Err(OutputError::FailedCommand(code)),
         subprocess::ExitStatus::Signaled(signal) => Err(OutputError::TerminatedCommand(signal)),
         _ => unreachable!(),
     }
 }
 
-fn compile_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
+fn compile_markdown<'m>(markdown: MarkDown<'m>) -> OutputResult<String> {
     //TODO: Once the relevant pull request is merged on pulldown_cmark, change this to write
     //directly to the file
     
@@ -91,9 +93,7 @@ fn compile_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputRes
 
     cmark::html::push_html(&mut compiled_html, markdown.into_iter());
 
-    file.write(&compiled_html.as_bytes())?;
-
-    Ok(())
+    Ok(compiled_html)
 }
 
 fn print_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
