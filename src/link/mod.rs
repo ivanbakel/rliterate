@@ -7,7 +7,7 @@ use std::path::{PathBuf};
 mod grammar {
     use super::*;
 
-    include!(concat!(env!("OUT_DIR"), "/link_parsing.rs"));
+    include!(concat!(env!("OUT_DIR"), "/parsing.rs"));
 }
 
 pub struct LinkState<'a> {
