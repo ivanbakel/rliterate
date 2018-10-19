@@ -41,7 +41,7 @@ pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file
                 compile_markdown(markdown)
             }?;
 
-            html::print(html_file, compiled_markdown, &settings.css)?;
+            html::print(html_file, compiled_markdown, &file.title, &settings.css)?;
 
             Ok(())
         },
