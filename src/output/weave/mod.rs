@@ -1,5 +1,6 @@
 mod markdown;
 use self::markdown::{MarkDown};
+mod html;
 
 use output::{OutputResult, OutputError};
 use output::css;
@@ -39,6 +40,8 @@ pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file
             } else {
                 compile_markdown(markdown)
             }?;
+
+            html::print(html_file, compiled_markdown, &settings.css)?;
 
             Ok(())
         },

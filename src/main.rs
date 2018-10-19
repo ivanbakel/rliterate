@@ -1,11 +1,15 @@
+#![feature(proc_macro_non_items)]
+#![feature(use_extern_macros)]
+
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
 extern crate clap;
 extern crate peg;
+extern crate subprocess;
 extern crate pulldown_cmark;
 extern crate prettify_cmark;
-extern crate subprocess;
+extern crate maud;
 
 mod args;
 mod parser;

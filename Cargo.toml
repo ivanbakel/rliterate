@@ -15,6 +15,9 @@ peg = "*"
 clap = "*"
 peg = "*"
 bitflags = "*"
-pulldown-cmark = "*"
-prettify-cmark = "*"
 subprocess = "*"
+
+pulldown-cmark = "^0.1.0"
+prettify-cmark = "*"
+maud = "*"
+
