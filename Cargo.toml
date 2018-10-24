@@ -12,6 +12,7 @@ path = "src/main.rs"
 peg = "*"
 
 [dependencies]
+log = "*"
 clap = "*"
 peg = "*"
 bitflags = "*"
@@ -19,5 +20,5 @@ subprocess = "*"
 
 pulldown-cmark = "^0.1.0"
 prettify-cmark = "*"
-maud = "*"
+maud = "0.19"
 
