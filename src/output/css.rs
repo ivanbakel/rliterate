@@ -18,10 +18,22 @@
  * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+use std::fmt;
 
 pub struct CssSettings {
     pub custom_css: CustomCss,
     pub custom_colorscheme: Option<String>,
+}
+
+impl fmt::Display for CssSettings {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "css file: {}, colorscheme file: {}", self.custom_css, 
+        if let Some(ref cs) = self.custom_colorscheme {
+            cs
+        } else {
+            "none"
+        })
+    }
 }
 
 impl CssSettings {
@@ -41,6 +53,16 @@ pub enum CustomCss {
     None,
     Add(String),
     Overwrite(String),
+}
+
+impl fmt::Display for CustomCss {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CustomCss::None => write!(f, "none"),
+            CustomCss::Add(ref add_file) => write!(f, "appending {}", add_file),
+            CustomCss::Overwrite(ref overwrite_file) => write!(f, "overwriting by {}", overwrite_file),
+        }
+    }
 }
 
 impl CustomCss {
