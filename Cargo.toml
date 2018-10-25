@@ -6,7 +6,11 @@ build = "build.rs"
 
 [[bin]]
 name = "literate"
-path = "src/main.rs"
+path = "src/bin/literate.rs"
+
+[lib]
+name = "rliterate"
+path = "src/lib.rs"
 
 [build-dependencies]
 peg = "*"
