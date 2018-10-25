@@ -34,7 +34,9 @@ use rliterate::{ProgramError};
 fn main() -> Result<(), ProgramError> {
     env_logger::init();
 
-    let metadata = cargo_metadata::metadata(env::current_dir().ok().as_ref().map(Path::new))
+    let manifest_path = env::current_dir().ok().map(|path| path.join("Cargo.toml"));
+
+    let metadata = cargo_metadata::metadata(manifest_path.as_ref().map(Path::new))
             .map_err(|err| ProgramError::Other(err.description().to_owned()))?;
 
     let lit_folder = Path::new(&metadata.workspace_root).join("lit");
