@@ -13,6 +13,7 @@ peg = "*"
 
 [dependencies]
 log = "*"
+env_logger = "*"
 clap = "*"
 peg = "*"
 bitflags = "*"

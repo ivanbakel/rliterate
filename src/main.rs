@@ -28,6 +28,7 @@ extern crate bitflags;
 extern crate clap;
 #[macro_use]
 extern crate log;
+extern crate env_logger;
 extern crate peg;
 extern crate subprocess;
 extern crate pulldown_cmark;
@@ -40,6 +41,8 @@ pub mod link;
 mod output;
 
 fn main() -> Result<(), ProgramError> {
+    env_logger::init();
+
     let args : clap::ArgMatches<'static> = args::get_arg_parser().get_matches();
 
     let input_path = args.value_of(args::input).unwrap();
