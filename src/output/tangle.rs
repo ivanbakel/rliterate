@@ -33,15 +33,17 @@ pub fn tangle_blocks<'a>(settings: &Settings,
                          canonical_code_blocks: &BlockMap, 
                          out_dir: &Path,
                          compiler: &'a Option<CompilerSettings>) -> OutputResult<()> {
+    trace!("Starting the tangle...");
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
         let output_file_path = out_dir.join(name);
         
+        info!("Found a file block \"{}\", writing to \"{}\"", name, output_file_path.to_string_lossy());
         // To avoid cluttering a workspace during linting, we do not produce the tangle output when
         // compiling
         if settings.compile {
             //Compile the file
-            settings.compile_file(compiler)?;
+            settings.compile_file(compiler, &output_file_path)?;
         } else {
             // Print the file out
             let to_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(&output_file_path)?;
@@ -49,6 +51,7 @@ pub fn tangle_blocks<'a>(settings: &Settings,
         }
     }
 
+    trace!("Finished the tangle");
     Ok(())
 }
 
@@ -63,7 +66,10 @@ impl Settings {
                       name: &'a str, 
                       file_block: &CanonicalCodeBlock<'a>, 
                       blocks: &BlockMap<'a>) -> OutputResult<()> {
-        self.print_block(&mut file, name, file_block, blocks, vec![], vec![])
+        trace!("Printing out \"{}\"...", name);
+        self.print_block(&mut file, name, file_block, blocks, vec![], vec![])?;
+        trace!("Finished printing out \"{}\"", name);
+        Ok(())
     }
     
     fn print_block<'a>(&self, 
@@ -114,11 +120,13 @@ impl Settings {
         writeln!(file, "");
     }
 
-    fn compile_file(&self, compiler_settings: &Option<CompilerSettings>) -> OutputResult<()> {
+    fn compile_file(&self, compiler_settings: &Option<CompilerSettings>, output_file_path: &Path) -> OutputResult<()> {
         if let Some(ref compiler_settings) = compiler_settings {
+            trace!("Compiling \"{}\"...", output_file_path.to_string_lossy());
             let compiler_result = subprocess::Exec::shell(&compiler_settings.command)
                 .join()?;
 
+            trace!("Finished compiling \"{}\"", output_file_path.to_string_lossy());
             match compiler_result {
                 subprocess::ExitStatus::Exited(0) => Ok(()),
                 subprocess::ExitStatus::Exited(code) => Err(OutputError::FailedCompiler(code)),

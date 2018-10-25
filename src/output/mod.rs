@@ -62,6 +62,7 @@ pub struct OutputSettings {
 
 impl OutputSettings {
     pub fn from_args(args: &ArgMatches<'static>) -> OutputResult<Self> {
+        trace!("Started parsing command-line arguments...");
         let output_dir = args.value_of(args::output_directory)
             .map_or(
                 env::current_dir().unwrap(),
@@ -69,6 +70,7 @@ impl OutputSettings {
             );
 
         let weave = if args.is_present(args::tangle) {
+            info!("Setting the tangle-only flag");
             None
         } else {
             let md_compiler = args.value_of(args::md_compiler)
@@ -81,6 +83,7 @@ impl OutputSettings {
                     _ => return Err(OutputError::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
                 }
             } else {
+                info!("No output type specified, defaulting to HTML");
                 weave::Type::HtmlViaMarkdown(md_compiler)
             };
 
@@ -91,6 +94,7 @@ impl OutputSettings {
         };
 
         let tangle = if args.is_present(args::weave) {
+            info!("Setting the weave-only flag");
             None
         } else {
             let line_numbers = args.value_of(args::line_numbers)
@@ -102,6 +106,7 @@ impl OutputSettings {
             })
         };
 
+        trace!("Finished parsing command-line arguments");
         Ok(OutputSettings {
             out_dir: output_dir,
             generate_output: args.is_present(args::no_output),
@@ -117,10 +122,12 @@ impl OutputSettings {
     }
 
     pub fn process<'a>(&self, link_state: link::LinkState<'a>) -> OutputResult<()> {
+        trace!("Started outputting files...");
         for (path, linked_file) in link_state.file_map.iter() {
             let canonical_code_blocks = canon::canonicalise_code_blocks(&linked_file.sections[..]);
 
             if self.generate_output {
+                trace!("Generating output for \"{}\"...", path.to_string_lossy());
                 if let Some(ref settings) = self.tangle {
                     tangle::tangle_blocks(settings, &canonical_code_blocks, &self.out_dir, &linked_file.compiler)?;
                 }
@@ -128,9 +135,11 @@ impl OutputSettings {
                 if let Some(ref weave_type) = self.weave {
                     weave::weave_file_with_blocks(weave_type, path, linked_file, &canonical_code_blocks, &self.out_dir)?;
                 }
+                trace!("Finished generating output for \"{}\"", path.to_string_lossy());
             }
         }
 
+        trace!("Finished outputting files");
         Ok(())
     }
 

@@ -76,6 +76,7 @@ impl ParseState {
     }
 
     pub fn from_input_path(input_path: &str) -> ParseResult<Self> {
+        trace!("Loading files from input path \"{}\"", input_path);
         let mut parse_state = ParseState::new();  
 
         for file in get_input_files(input_path)?.into_iter() {
@@ -87,11 +88,13 @@ impl ParseState {
 
     pub fn parse_file(&mut self, file_path: &PathBuf) -> ParseResult<()> {
         if self.in_progress.contains(file_path) {
+            error!("Found an include loop when trying to load file \"{}\"", file_path.to_string_lossy());
             Err(ParseError::FileLoop)
         } else if self.file_map.contains_key(file_path) {
+            error!("Ended up trying to parse file \"{}\" twice", file_path.to_string_lossy());
             Err(ParseError::FileRepeat)
-        } else {
-            
+        } else { 
+            trace!("Parsing file \"{}\"", file_path.to_string_lossy());
             let file_contents = fs::read_to_string(file_path)?; 
             let lit_blocks = grammar::lit_file(&file_contents)?;
             
@@ -102,6 +105,7 @@ impl ParseState {
             once!(self.css_settings, is_some, Some(settings), ParseError::ConflictingCss);
 
             self.in_progress.remove(file_path);
+            info!("Finished parsing \"{}\"", file_path.to_string_lossy());
             self.file_map.insert(file_path.clone(), lit_file);
             Ok(())
         }
@@ -112,8 +116,10 @@ fn get_input_files(input_path: &str) -> ParseResult<Vec<PathBuf>> {
     let path_buf = Path::new(input_path).to_path_buf();
 
     if path_buf.is_file() {
+        info!("\"{}\" is a file, taking it as the only input", input_path);
         Ok(vec![path_buf])
     } else if path_buf.is_dir() {
+        trace!("\"{}\" is a directory, traversing it...", input_path);
         let files = fs::read_dir(path_buf)?;
 
         let mut paths = Vec::new();
@@ -124,9 +130,11 @@ fn get_input_files(input_path: &str) -> ParseResult<Vec<PathBuf>> {
             let entry_path = dir_entry.path();
 
             if entry_path.is_file() && entry_path.extension().map_or(false, |extension| extension == "lit") {
+                info!("Adding \"{}\" as an input file", entry_path.to_string_lossy());
                 paths.push(entry_path);
             }
         }
+        trace!("Finished traversing \"{}\" for input files", input_path);
 
         Ok(paths)
     } else {

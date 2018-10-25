@@ -144,7 +144,7 @@ impl LitFile {
     
         let compiler_settings = compiler_command.and_then(|command| {
             let error_format = error_format.or(try_guess_error_format(&command))?;
-    
+
             Some(CompilerSettings {
                 command: command, 
                 formatter: error_format

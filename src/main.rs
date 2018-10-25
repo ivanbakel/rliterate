@@ -26,6 +26,8 @@
 extern crate bitflags;
 #[macro_use]
 extern crate clap;
+#[macro_use]
+extern crate log;
 extern crate peg;
 extern crate subprocess;
 extern crate pulldown_cmark;
@@ -48,6 +50,7 @@ fn main() -> Result<(), ProgramError> {
 
     let mut output_settings = output::OutputSettings::from_args(&args)?;
     if let Some(css_settings) = parse_state.css_settings {
+        info!("Loaded css settings \"{}\" from file commands.", css_settings);
         output_settings.set_css(css_settings);
     }
     output_settings.process(linked_state)?;

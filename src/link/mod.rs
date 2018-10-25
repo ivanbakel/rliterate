@@ -37,14 +37,17 @@ pub struct LinkState<'a> {
 
 impl<'a> LinkState<'a> {
     pub fn link(file_map: &'a parser::FileMap) -> LinkResult<Self> {
+        trace!("Started linking files...");
         let mut linked_file_map = HashMap::new();
     
         for (path, lit_file) in file_map.iter() {
+            info!("Linking up the blocks in \"{}\"", path.to_string_lossy());
             let linked_file = link_lit_file(lit_file)?;
     
             linked_file_map.insert(path, linked_file);
         }
-    
+
+        trace!("Finished linking files");
         Ok(LinkState {
             file_map: linked_file_map,
         })
@@ -197,9 +200,11 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
     }).collect();
 
     //TODO: Detect a cycle!
+    warn!("Currently, no cycle detection exists - you may hang later!");
 
     for link in all_links {
         if !(link_map.contains_key(link)) {
+            error!("Found a link to \"{}\", but that block doesn't exist", link);
             Err(LinkError::BadLinkName)?;
         }
     }

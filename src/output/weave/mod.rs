@@ -47,12 +47,14 @@ pub enum Type {
 }
 
 pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>, block_map: &BlockMap, out_dir: &Path) -> OutputResult<()> {
+    trace!("Starting the weave...");
     match settings.weave_type {
         Type::HtmlViaMarkdown(ref maybe_command) => {
             let markdown = MarkDown::build(settings, file, block_map);
 
             let mut html_filename = out_dir.join(file_name.file_stem().unwrap());
             html_filename.set_extension("html");
+            info!("Writing HTML documentation to \"{}\"", html_filename.to_string_lossy());
 
             let html_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(html_filename)?;
 
@@ -63,22 +65,21 @@ pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file
             }?;
 
             html::print(html_file, compiled_markdown, &file.title, &settings.css)?;
-
-            Ok(())
         },
         Type::Markdown => {
             let markdown = MarkDown::build(settings, file, block_map);
 
             let mut md_filename = out_dir.join(file_name.file_stem().unwrap());
             md_filename.set_extension("md");
+            info!("Writing Markdown documentation to \"{}\"", md_filename.to_string_lossy());
 
             let md_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(md_filename)?;
 
             print_markdown(md_file, markdown)?;
-
-            Ok(())
         }
     }
+    trace!("Finished the weave");
+    Ok(())
 }
 
 impl From<subprocess::PopenError> for OutputError {
@@ -95,11 +96,14 @@ fn call_markdown_compiler<'m>(command: &str, markdown: MarkDown<'m>) -> OutputRe
         let mut pretty_printer = prettify_cmark::PrettyPrinter::new(&mut printed_markdown);
         pretty_printer.push_events(markdown.into_iter()).unwrap();
     }
-    
+   
+    trace!("Invoking the requested markdown compiler \"{}\"...", command);
     let process_result = subprocess::Exec::shell(command)
         .stdin(printed_markdown.as_str())
         .stdout(subprocess::Redirection::Pipe)
         .capture()?;
+
+    trace!("Finished invoking the requested markdown compiler");
 
     match process_result.exit_status {
         subprocess::ExitStatus::Exited(0) => Ok(process_result.stdout_str()),
@@ -115,7 +119,10 @@ fn compile_markdown<'m>(markdown: MarkDown<'m>) -> OutputResult<String> {
     
     let mut compiled_html = String::new();
 
+    trace!("Invoking pulldown_cmark...");
     cmark::html::push_html(&mut compiled_html, markdown.into_iter());
+
+    trace!("Finished invoking pulldown_cmark");
 
     Ok(compiled_html)
 }
