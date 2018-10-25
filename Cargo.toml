@@ -3,10 +3,15 @@ name = "rliterate"
 version = "0.1.0"
 authors = ["Isaac van Bakel <ivb@vanbakel.io>"]
 build = "build.rs"
+autobins = false
 
 [[bin]]
 name = "literate"
 path = "src/bin/literate.rs"
+
+[[bin]]
+name = "cargo-lit"
+path = "src/bin/cargo.rs"
 
 [lib]
 name = "rliterate"
@@ -26,4 +31,6 @@ subprocess = "*"
 pulldown-cmark = "^0.1.0"
 prettify-cmark = "*"
 maud = "0.19"
+
+cargo_metadata = "*"
 

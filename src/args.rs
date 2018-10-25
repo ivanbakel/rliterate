@@ -42,6 +42,15 @@ pub fn get_main_arg_parser() -> App<'static, 'static> {
     add_common_cli_options(app)
 }
 
+pub fn get_cargo_arg_parser() -> App<'static, 'static> {
+    let mut app = App::new("cargo lit")
+        .about("A cargo subcommand for processing a literate project's `.lit` files and generating source code.")
+        .before_help("Consult the help for `literate` for help with using this subcommand.")
+        .version(crate_version!());
+
+    add_common_cli_options(app)
+}
+
 fn add_common_cli_options(app: App<'static, 'static>) -> App<'static, 'static> {
     app.arg(
             Arg::with_name(no_output)
