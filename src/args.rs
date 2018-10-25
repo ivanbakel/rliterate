@@ -21,8 +21,8 @@
 
 use clap::{App, Arg, ArgGroup};
 
-pub fn get_arg_parser() -> App<'static, 'static> {
-    App::new("Literate")
+pub fn get_main_arg_parser() -> App<'static, 'static> {
+    let mut app = App::new("Literate")
         .about("Literate programming tool, based on the original Dlang `literate`.")
         .before_help("Consult the `literate` docs for information about the .lit format.")
         .version(crate_version!())
@@ -32,6 +32,18 @@ pub fn get_arg_parser() -> App<'static, 'static> {
             .index(1)
             .required(true))
         .arg(
+            Arg::with_name(output_directory)
+            .help("The directory to write generated files to.")
+            .short("odir")
+            .long("out-dir")
+            .required(false)
+            .takes_value(true));
+
+    add_common_cli_options(app)
+}
+
+fn add_common_cli_options(app: App<'static, 'static>) -> App<'static, 'static> {
+    app.arg(
             Arg::with_name(no_output)
             .help("Don't produce any output files.")
             .short("no")
@@ -44,13 +56,6 @@ pub fn get_arg_parser() -> App<'static, 'static> {
             .long("compiler")
             .required(false)
             .conflicts_with(weave))
-        .arg(
-            Arg::with_name(output_directory)
-            .help("The directory to write generated files to.")
-            .short("odir")
-            .long("out-dir")
-            .required(false)
-            .takes_value(true))
         .arg(
             Arg::with_name(line_numbers)
             .help("Set the format string for line numbers in the code output")

@@ -30,7 +30,6 @@ use super::args;
 use clap::{ArgMatches};
 use subprocess::{PopenError};
 use std::path::{Path, PathBuf};
-use std::env;
 use std::io;
 
 type OutputResult<T> = Result<T, OutputError>;
@@ -61,13 +60,8 @@ pub struct OutputSettings {
 }
 
 impl OutputSettings {
-    pub fn from_args(args: &ArgMatches<'static>) -> OutputResult<Self> {
+    pub fn from_args(output_dir : &Path, args: &ArgMatches<'static>) -> OutputResult<Self> {
         trace!("Started parsing command-line arguments...");
-        let output_dir = args.value_of(args::output_directory)
-            .map_or(
-                env::current_dir().unwrap(),
-                |odir| Path::new(odir).to_path_buf()
-            );
 
         let weave = if args.is_present(args::tangle) {
             info!("Setting the tangle-only flag");
@@ -108,7 +102,7 @@ impl OutputSettings {
 
         trace!("Finished parsing command-line arguments");
         Ok(OutputSettings {
-            out_dir: output_dir,
+            out_dir: output_dir.to_path_buf(),
             generate_output: args.is_present(args::no_output),
             weave: weave,
             tangle: tangle,

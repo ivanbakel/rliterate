@@ -40,18 +40,26 @@ mod parser;
 pub mod link;
 mod output;
 
+use std::env;
+use std::path;
+
 fn main() -> Result<(), ProgramError> {
     env_logger::init();
 
-    let args : clap::ArgMatches<'static> = args::get_arg_parser().get_matches();
+    let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
 
     let input_path = args.value_of(args::input).unwrap();
-    
+    let output_path = args.value_of(args::output_directory)
+            .map_or(
+                env::current_dir().unwrap(),
+                |out_dir| path::Path::new(out_dir).to_path_buf()
+            );
+
     let parse_state = parser::ParseState::from_input_path(input_path)?;
     
     let linked_state = link::LinkState::link(&parse_state.file_map)?;
 
-    let mut output_settings = output::OutputSettings::from_args(&args)?;
+    let mut output_settings = output::OutputSettings::from_args(&output_path, &args)?;
     if let Some(css_settings) = parse_state.css_settings {
         info!("Loaded css settings \"{}\" from file commands.", css_settings);
         output_settings.set_css(css_settings);
