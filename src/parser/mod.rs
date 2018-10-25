@@ -75,8 +75,8 @@ impl ParseState {
         }
     }
 
-    pub fn from_input_path(input_path: &str) -> ParseResult<Self> {
-        trace!("Loading files from input path \"{}\"", input_path);
+    pub fn from_input_path(input_path: &Path) -> ParseResult<Self> {
+        trace!("Loading files from input path \"{}\"", input_path.to_string_lossy());
         let mut parse_state = ParseState::new();  
 
         for file in get_input_files(input_path)?.into_iter() {
@@ -112,14 +112,14 @@ impl ParseState {
     }
 }
 
-fn get_input_files(input_path: &str) -> ParseResult<Vec<PathBuf>> {
-    let path_buf = Path::new(input_path).to_path_buf();
+fn get_input_files(input_path: &Path) -> ParseResult<Vec<PathBuf>> {
+    let path_buf = input_path.to_path_buf();
 
     if path_buf.is_file() {
-        info!("\"{}\" is a file, taking it as the only input", input_path);
+        info!("\"{}\" is a file, taking it as the only input", input_path.to_string_lossy());
         Ok(vec![path_buf])
     } else if path_buf.is_dir() {
-        trace!("\"{}\" is a directory, traversing it...", input_path);
+        trace!("\"{}\" is a directory, traversing it...", input_path.to_string_lossy());
         let files = fs::read_dir(path_buf)?;
 
         let mut paths = Vec::new();
@@ -134,20 +134,20 @@ fn get_input_files(input_path: &str) -> ParseResult<Vec<PathBuf>> {
                 paths.push(entry_path);
             }
         }
-        trace!("Finished traversing \"{}\" for input files", input_path);
+        trace!("Finished traversing \"{}\" for input files", input_path.to_string_lossy());
 
         Ok(paths)
     } else {
-        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Could not process input path: {}", input_path))))
+        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Could not process input path: {}", input_path.to_string_lossy()))))
     }
 }
 
-pub fn get_input_file(input_path: &str) -> ParseResult<PathBuf> {
-    let path_buf = Path::new(input_path).to_path_buf();
+pub fn get_input_file(input_path: &Path) -> ParseResult<PathBuf> {
+    let path_buf = input_path.to_path_buf();
 
     if path_buf.is_file() {
         Ok(path_buf)
     } else {
-        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Input path was not a file: {}", input_path))))
+        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Input path was not a file: {}", input_path.to_string_lossy()))))
     }
 }

@@ -23,7 +23,7 @@ use parser::{ParseState, ParseResult, ParseError, get_input_file};
 use parser::grammar::{LitBlock, CodeBlock, Command, BlockModifier};
 use output::css::{CustomCss, CssSettings};
 
-use std::path::{PathBuf};
+use std::path::{Path, PathBuf};
 
 #[macro_use]
 mod macros {
@@ -130,7 +130,7 @@ impl LitFile {
                     current_section.blocks.push(Block::parse_prose(lines));
                 },
                 LitBlock::Chapter { title: chapter_title, file_name: chapter_file } => {
-                    let file_path = get_input_file(chapter_file)?;
+                    let file_path = get_input_file(Path::new(chapter_file))?;
                     
                     parse_state.parse_file(&file_path)?;
 

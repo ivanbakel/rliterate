@@ -41,7 +41,7 @@ mod parser;
 pub mod link;
 pub mod output;
 
-pub fn run(input_path: &str, mut output_settings: output::OutputSettings) -> Result<(), ProgramError> {
+pub fn run(input_path: &path::Path, mut output_settings: output::OutputSettings) -> Result<(), ProgramError> {
     let parse_state = parser::ParseState::from_input_path(input_path)?;
     
     let linked_state = link::LinkState::link(&parse_state.file_map)?;
@@ -59,6 +59,7 @@ pub enum ProgramError {
     ParserError(parser::ParseError),
     LinkerError(link::LinkError),
     OutputError(output::OutputError),
+    Other(String),
 }
 
 impl From<parser::ParseError> for ProgramError {

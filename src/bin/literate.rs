@@ -35,7 +35,7 @@ fn main() -> Result<(), ProgramError> {
 
     let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
 
-    let input_path = args.value_of(args::input).unwrap();
+    let input_path = path::Path::new(args.value_of(args::input).unwrap());
     let output_path = args.value_of(args::output_directory)
             .map_or(
                 env::current_dir().unwrap(),
@@ -44,5 +44,5 @@ fn main() -> Result<(), ProgramError> {
 
     let output_settings = output::OutputSettings::from_args(&output_path, &args)?;
 
-    run_literate(input_path, output_settings)
+    run(input_path, output_settings)
 }
