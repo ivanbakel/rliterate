@@ -19,35 +19,32 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-extern crate cargo_metadata;
-extern crate env_logger;
+use args;
 
-extern crate rliterate;
+use clap::{ArgMatches};
 
-use std::env;
-use std::path::{Path};
+use std::borrow::Cow;
+use std::path;
 
-use rliterate::args;
-use rliterate::input;
-use rliterate::output;
-use rliterate::{ProgramError};
-
-fn main() -> Result<(), ProgramError> {
-    env_logger::init();
-
-    let manifest_path = env::current_dir().ok().map(|path| path.join("Cargo.toml"));
-
-    let metadata = cargo_metadata::metadata(manifest_path.as_ref().map(Path::new))
-            .map_err(|err| ProgramError::Other(err.description().to_owned()))?;
-
-    let lit_folder = Path::new(&metadata.workspace_root).join("lit");
-    let src_folder = Path::new(&metadata.workspace_root).join("src");
-
-    let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
-
-    let input_settings = input::InputSettings::recurse(&lit_folder);
-    let output_settings = output::OutputSettings::from_args(&src_folder, &args)?;
-    
-    rliterate::run(input_settings, output_settings)
+pub struct InputSettings {
+    pub input_path: path::PathBuf,
+    pub recurse: bool,
 }
+
+impl InputSettings {
+    pub fn from_args(input_path: &path::Path, args: &ArgMatches<'static>) -> Self {
+        InputSettings {
+            input_path: input_path.to_owned(),
+            recurse: args.is_present(args::recurse),
+        }
+    }
+    
+    pub fn recurse(input_path: &path::Path) -> Self {
+        InputSettings {
+            input_path: input_path.to_owned(),
+            recurse: true,
+        }
+    }
+}
+
 

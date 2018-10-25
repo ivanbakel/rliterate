@@ -39,10 +39,11 @@ use std::path;
 pub mod args;
 mod parser;
 pub mod link;
+pub mod input;
 pub mod output;
 
-pub fn run(input_path: &path::Path, mut output_settings: output::OutputSettings) -> Result<(), ProgramError> {
-    let parse_state = parser::ParseState::from_input_path(input_path)?;
+pub fn run(input_settings: input::InputSettings, mut output_settings: output::OutputSettings) -> Result<(), ProgramError> {
+    let parse_state = parser::ParseState::from_input(input_settings)?;
     
     let linked_state = link::LinkState::link(&parse_state.file_map)?;
     if let Some(css_settings) = parse_state.css_settings {

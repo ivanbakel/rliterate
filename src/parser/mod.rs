@@ -25,6 +25,7 @@ pub use self::ast::{LitFile, Section, Block, CompilerSettings};
 mod grammar;
 pub use self::grammar::{BlockModifier};
 
+use input;
 use output::css::{CssSettings};
 
 use std::collections::{HashMap, HashSet};
@@ -75,11 +76,11 @@ impl ParseState {
         }
     }
 
-    pub fn from_input_path(input_path: &Path) -> ParseResult<Self> {
-        trace!("Loading files from input path \"{}\"", input_path.to_string_lossy());
+    pub fn from_input(input_settings: input::InputSettings) -> ParseResult<Self> {
+        trace!("Loading files from input path \"{}\"", input_settings.input_path.to_string_lossy());
         let mut parse_state = ParseState::new();  
 
-        for file in get_input_files(input_path)?.into_iter() {
+        for file in get_input_files(&input_settings.input_path, input_settings.recurse)?.into_iter() {
             parse_state.parse_file(&file)?;
         }
 
@@ -112,7 +113,7 @@ impl ParseState {
     }
 }
 
-fn get_input_files(input_path: &Path) -> ParseResult<Vec<PathBuf>> {
+fn get_input_files(input_path: &Path, recurse: bool) -> ParseResult<Vec<PathBuf>> {
     let path_buf = input_path.to_path_buf();
 
     if path_buf.is_file() {
@@ -132,6 +133,9 @@ fn get_input_files(input_path: &Path) -> ParseResult<Vec<PathBuf>> {
             if entry_path.is_file() && entry_path.extension().map_or(false, |extension| extension == "lit") {
                 info!("Adding \"{}\" as an input file", entry_path.to_string_lossy());
                 paths.push(entry_path);
+            } else if entry_path.is_dir() && recurse {
+                info!("Recursing into \"{}\" as an input directory", entry_path.to_string_lossy());
+                paths.append(&mut get_input_files(&entry_path, recurse)?);
             }
         }
         trace!("Finished traversing \"{}\" for input files", input_path.to_string_lossy());

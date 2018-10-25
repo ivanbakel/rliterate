@@ -37,7 +37,13 @@ pub fn get_main_arg_parser() -> App<'static, 'static> {
             .short("odir")
             .long("out-dir")
             .required(false)
-            .takes_value(true));
+            .takes_value(true))
+        .arg(
+            Arg::with_name(recurse)
+            .help("Recurse into subdirectories.")
+            .short("r")
+            .long("recurse")
+            .required(false));
 
     add_common_cli_options(app)
 }
@@ -103,6 +109,7 @@ fn add_common_cli_options(app: App<'static, 'static>) -> App<'static, 'static> {
 
 pub const input : &'static str = "input";
 pub const no_output : &'static str = "no_output";
+pub const recurse : &'static str = "recurse";
 pub const compiler : &'static str = "compiler";
 pub const output_directory : &'static str = "output_directory";
 pub const line_numbers : &'static str = "line_numbers";

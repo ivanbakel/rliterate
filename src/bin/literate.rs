@@ -27,6 +27,7 @@ use std::env;
 use std::path;
 
 use rliterate::args;
+use rliterate::input;
 use rliterate::output;
 use rliterate::{ProgramError, run};
 
@@ -42,7 +43,8 @@ fn main() -> Result<(), ProgramError> {
                 |out_dir| path::Path::new(out_dir).to_path_buf()
             );
 
+    let input_settings = input::InputSettings::from_args(input_path, &args);
     let output_settings = output::OutputSettings::from_args(&output_path, &args)?;
 
-    run(input_path, output_settings)
+    run(input_settings, output_settings)
 }
