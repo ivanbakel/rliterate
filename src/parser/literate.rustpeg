@@ -49,6 +49,9 @@ arg_separator = "---"
 name -> &'input str
   = $(((!arg_separator non_whitespace)+) ++ (__))
 
+delimited_name<delim>
+  = $(((!delim non_whitespace)+) ++ (__))
+
 file_extension -> &'input str
   = $("." [A_Za-z_-]+)
 
@@ -85,12 +88,15 @@ command -> Command<'input>
 codeblock_delim = "---"
 
 block_name -> &'input str
-  = name
+  = delimited_name<(arg_separator / block_modifier)>
 
 block_modifier -> BlockModifier
   = append
   / redef
   / arg_separator _ mods:(block_mods ++ __) { mods.into_iter().fold(BlockModifier::empty(), |set, flag| set | flag) }
+
+possible_block_modifier -> BlockModifier
+  =  modifier:block_modifier { modifier } 
   / _ { BlockModifier::empty() }
 
 block_mods -> BlockModifier
@@ -105,7 +111,7 @@ redef -> BlockModifier
   = "-=" { BlockModifier::Redef }
 
 codeblock_header -> (&'input str, BlockModifier)
-   = named_line<codeblock_delim _ name:block_name _ mods:block_modifier { (name, mods) }>
+   = named_line<codeblock_delim _ name:block_name _ mods:possible_block_modifier { (name, mods) }>
 
 /// Prose
 
