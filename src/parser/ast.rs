@@ -106,6 +106,10 @@ impl LitFile {
                     Command::Section(name) => {
                         let last_id = current_section.id;
                         sections.push(current_section);
+                        
+                        debug!("Started a new section named \"{:?}\", id: {}", 
+                               name,
+                               last_id + 1);
     
                         current_section = Section {
                             id: last_id + 1_usize,
@@ -127,9 +131,15 @@ impl LitFile {
                     },
                 },
                 LitBlock::Code(code) => {
+                    debug!("Added a code block to section \"{:?}\", id: {}", 
+                           current_section.name.as_str(),
+                           current_section.id);
                     current_section.blocks.push(Block::parse_code(code));
                 },
                 LitBlock::Prose(lines) => {
+                    debug!("Added a prose block to section \"{:?}\", id: {}", 
+                           current_section.name.as_str(),
+                           current_section.id);
                     current_section.blocks.push(Block::parse_prose(lines));
                 },
                 LitBlock::Chapter { title: chapter_title, file_name: chapter_file } => {
