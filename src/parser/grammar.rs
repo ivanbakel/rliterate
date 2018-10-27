@@ -75,57 +75,63 @@ pub fn lit_file<'a>(input: &'a str) -> Result<Vec<LitBlock<'a>>, ParseError> {
 fn parse_lines<'a>(lines: Vec<PartialLitLine<'a>>) -> Result<Vec<LitBlock<'a>>, ParseError> {
     let mut blocks = vec![];
 
-    let mut code_block = None;
-    let mut prose_block = None;
-    
-    for line in lines.into_iter() {
+    let mut prose_lines: Vec<&'a str> = vec![];
+   
+    macro_rules! close_prose {
+        () => {
+            blocks.push(LitBlock::Prose(prose_lines));
+            prose_lines = vec![];
+        }
+    }
+
+    let mut line_iter = lines.into_iter();
+            
+    while let Some(line) = line_iter.next() {
         match line {
             PartialLitLine::CodeBlockStart(name, modifiers) => {
-                if let Some(current_block) = code_block {
-                    blocks.push(LitBlock::Code(current_block));
-                }
+                close_prose!();
 
-                if let Some(current_block) = prose_block {
-                    blocks.push(LitBlock::Prose(current_block));
-
-                    prose_block = None;
-                }
-
-                code_block = Some(CodeBlock {
-                    block_name: name,
-                    modifiers: modifiers,
-                    contents: vec![],
-                });
-            },
-            PartialLitLine::CodeBlockEnd => {
-                if let Some(current_block) = code_block {
-                    blocks.push(LitBlock::Code(current_block));
-                    code_block = None;
-                } else {
-                    panic!()
-                }
-            },
-            PartialLitLine::Line(line) => {
-                if let Some(ref mut current_block) = code_block {
-                    current_block.contents.push(line);
-                } else {
-                    let line = lit_line(line)?;
-
-                    match line {
-                        LitLine::Command(command) => {
-                            blocks.push(LitBlock::Command(command));
+                let mut code = CodeBlock {
+                        block_name: name,
+                        modifiers: modifiers,
+                        contents: vec![],
+                };
+                while let Some(code_line) = line_iter.next() {
+                    match code_line {
+                        PartialLitLine::CodeBlockEnd => {
+                            break;
                         },
-                        LitLine::Chapter { title, file_name } => {
-                            blocks.push(LitBlock::Chapter { title, file_name });
-                        },
-                        LitLine::Prose(line) => {
-                            if let Some(ref mut lines) = prose_block {
-                                lines.push(line);
-                            } else {
-                                prose_block = Some(vec![line]);
-                            }
+                        PartialLitLine::Line(line) => {
+                            code.contents.push(line);
+                        }
+                        PartialLitLine::CodeBlockStart(..) => {
+                            error!("Tried to start a new code block without ending the previous one.");
+                            panic!()
                         }
                     }
+                }
+
+                blocks.push(LitBlock::Code(code));
+            },
+            PartialLitLine::CodeBlockEnd => {
+                error!("Found a code block with no name");
+                panic!()
+            },
+            PartialLitLine::Line(line) => {
+                let line = lit_line(line)?;
+
+                match line {
+                    LitLine::Command(command) => {
+                        close_prose!();
+                        blocks.push(LitBlock::Command(command));
+                    },
+                    LitLine::Chapter { title, file_name } => {
+                        close_prose!();
+                        blocks.push(LitBlock::Chapter { title, file_name });
+                    },
+                    LitLine::Prose(line) => {
+                        prose_lines.push(line);
+                    },
                 }
             },
         }

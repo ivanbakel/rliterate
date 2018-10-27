@@ -45,6 +45,7 @@ pub enum ParseError {
     FileLoop,
     FileRepeat,
     GrammarError(grammar::ParseError),
+    FormatError,
 }
 
 impl From<grammar::ParseError> for ParseError {
