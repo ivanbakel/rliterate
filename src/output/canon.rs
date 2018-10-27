@@ -32,9 +32,9 @@ pub struct CanonicalCodeBlock<'a> {
     print_to_weave: bool,
     form: CCBForm,
     contents: Vec<LinkedLine<'a>>,
-    pub first_defined_in: &'a str,
-    appended_to_in: Vec<&'a str>,
-    redefined_in: Vec<&'a str>,
+    pub first_defined_in: usize,
+    appended_to_in: Vec<usize>,
+    redefined_in: Vec<usize>,
 }
 
 pub enum CCBForm {
@@ -43,7 +43,7 @@ pub enum CCBForm {
 }
 
 impl<'a> CanonicalCodeBlock<'a> {
-    fn from_form(form : CCBForm, in_section: &'a str) -> Self {
+    fn from_form(form : CCBForm, in_section: usize) -> Self {
         CanonicalCodeBlock {
             print_header: true,
             print_to_tangle: true,
@@ -96,11 +96,11 @@ impl<'a> CanonicalCodeBlock<'a> {
         self.print_to_weave &= !modifiers.contains(BlockModifier::NoWeave);
     }
 
-    fn mark_redefined(&mut self, in_section: &'a str) {
+    fn mark_redefined(&mut self, in_section: usize) {
         self.redefined_in.push(in_section);
     }
     
-    fn mark_appended(&mut self, in_section: &'a str) {
+    fn mark_appended(&mut self, in_section: usize) {
         self.appended_to_in.push(in_section);
     }
 }
@@ -121,13 +121,13 @@ pub fn canonicalise_code_blocks<'a>(sections: &[LinkedSection<'a>]) -> BlockMap<
                         if modifiers.contains(BlockModifier::Redef) {
                             canonical.replace_lines(lines);
                             canonical.set_modifiers(*modifiers);
-                            canonical.mark_redefined(&section.name);
+                            canonical.mark_redefined(section.id);
                         } else {
                             if modifiers.contains(BlockModifier::Append) {
                                 canonical.add_modifiers(*modifiers);
                             }
                             canonical.append_lines(lines);
-                            canonical.mark_appended(&section.name);
+                            canonical.mark_appended(section.id);
                         }
                     } else {
                         let form = if Path::new(name).extension().is_some() {
@@ -136,7 +136,7 @@ pub fn canonicalise_code_blocks<'a>(sections: &[LinkedSection<'a>]) -> BlockMap<
                             CCBForm::Block
                         };
 
-                        let mut canonical = CanonicalCodeBlock::from_form(form, &section.name);
+                        let mut canonical = CanonicalCodeBlock::from_form(form, section.id);
                         canonical.replace_lines(lines);
                         canonical.set_modifiers(*modifiers);
 

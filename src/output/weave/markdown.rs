@@ -75,12 +75,16 @@ fn build_title<'a>(title: &'a str) -> Vec<cmark::Event<'a>> {
     ]
 }
 
-fn build_section_header<'a>(settings: &super::Settings, name: &'a str) -> Vec<cmark::Event<'a>> {
-    vec![
-        cmark::Event::Start(cmark::Tag::Header(4)),
-        cmark::Event::Text(Cow::Borrowed(name)),
-        cmark::Event::End(cmark::Tag::Header(4)),
-    ]
+fn build_section_header<'a>(settings: &super::Settings, name: Option<&'a str>) -> Vec<cmark::Event<'a>> {
+    if let Some(name) = name {
+        vec![
+            cmark::Event::Start(cmark::Tag::Header(4)),
+            cmark::Event::Text(Cow::Borrowed(name)),
+            cmark::Event::End(cmark::Tag::Header(4)),
+        ]
+    } else {
+        vec![]
+    }
 }
 
 fn build_code_block<'a>(settings: &super::Settings, name: &'a str, lines: &'a [LinkedLine<'a>], block_map: &'a BlockMap, code_type: &'a str) -> Vec<cmark::Event<'a>> {

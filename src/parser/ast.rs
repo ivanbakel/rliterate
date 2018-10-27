@@ -78,6 +78,7 @@ impl LitFile {
     
         let mut sections = Vec::new();
         let mut current_section = Section {
+            id: 0_usize,
             name: SectionName::Implicit,
             blocks: Vec::new()
         };
@@ -103,9 +104,11 @@ impl LitFile {
                         once!(error_format, generate_error_format(formatter))
                     },
                     Command::Section(name) => {
+                        let last_id = current_section.id;
                         sections.push(current_section);
     
                         current_section = Section {
+                            id: last_id + 1_usize,
                             name: SectionName::parse(name),
                             blocks: Vec::new()
                         };
@@ -206,15 +209,16 @@ impl SectionName {
         }
     }
 
-    pub fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> Option<&str> {
         match self {
-            &SectionName::Declared(ref name) => name.as_str(),
-            &SectionName::Implicit | &SectionName::None => "",
+            &SectionName::Declared(ref name) => Some(name.as_str()),
+            &SectionName::Implicit | &SectionName::None => None,
         }
     }
 }
 
 pub struct Section {
+    pub id: usize,
     pub name: SectionName,
     pub blocks: Vec<Block>
 }
