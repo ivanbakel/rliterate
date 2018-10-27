@@ -79,6 +79,7 @@ a_command -> Command<'input>
   / "add_css" __ file:css_file { Command::AddCss(file) }
   / "overwrite_css" __ file:css_file { Command::OverwriteCss(file) }
   / "colorscheme" __ file:css_file { Command::Colorscheme(file) }
+  / #expected("A valid command")
 
 command -> Command<'input>
   = named_line<"@" a_command:a_command { a_command }>
@@ -116,7 +117,7 @@ codeblock_header -> (&'input str, BlockModifier)
 /// Prose
 
 prose -> &'input str
-  = $((!(newline / "//") .)*)
+  = $(!'@' (!(newline / "//") .)*)
 
 prose_line -> &'input str
   = named_line<prose>
