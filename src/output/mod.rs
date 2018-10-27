@@ -103,7 +103,7 @@ impl OutputSettings {
         trace!("Finished parsing command-line arguments");
         Ok(OutputSettings {
             out_dir: output_dir.to_path_buf(),
-            generate_output: args.is_present(args::no_output),
+            generate_output: !args.is_present(args::no_output),
             weave: weave,
             tangle: tangle,
         })
