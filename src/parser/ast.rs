@@ -79,6 +79,7 @@ impl LitFile {
         let mut sections = Vec::new();
         let mut current_section = Section {
             id: 0_usize,
+            depth: 0_usize,
             name: SectionName::Implicit,
             blocks: Vec::new()
         };
@@ -103,7 +104,7 @@ impl LitFile {
                     Command::ErrorFormat(formatter) => {
                         once!(error_format, generate_error_format(formatter))
                     },
-                    Command::Section(name) => {
+                    Command::Section { name, depth } => {
                         let last_id = current_section.id;
                         sections.push(current_section);
                         
@@ -113,6 +114,7 @@ impl LitFile {
     
                         current_section = Section {
                             id: last_id + 1_usize,
+                            depth: depth,
                             name: SectionName::parse(name),
                             blocks: Vec::new()
                         };
@@ -229,6 +231,7 @@ impl SectionName {
 
 pub struct Section {
     pub id: usize,
+    pub depth: usize,
     pub name: SectionName,
     pub blocks: Vec<Block>
 }

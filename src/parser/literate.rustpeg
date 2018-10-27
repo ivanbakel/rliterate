@@ -69,7 +69,7 @@ css_file -> &'input str
 
 a_command -> Command<'input>
   = "title" __ title:name { Command::Title(title) }
-  / "s" __ section_name:(name?) { Command::Section(section_name) }
+  / esses:$("s"+) __ section_name:(name?) { Command::Section { name: section_name, depth: esses.len() - 1 } }
   / "code_type" __ ctype:$([A-Za-z_-]+) _ extension:file_extension 
     { Command::CodeType { code_type: ctype, file_extension: extension } }
   / "comment_type" __ pattern:comment_pattern { Command::CommentType(pattern) }

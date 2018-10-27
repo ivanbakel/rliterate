@@ -24,7 +24,7 @@ include!(concat!(env!("OUT_DIR"), "/literate.rs"));
 
 pub enum Command<'a> {
     Title(&'a str),
-    Section(Option<&'a str>),
+    Section { name: Option<&'a str>, depth: usize },
     CodeType { code_type:&'a str, file_extension:&'a str},
     CommentType(&'a str),
     Compiler(&'a str),

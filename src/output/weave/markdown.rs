@@ -41,7 +41,7 @@ impl<'m> MarkDown<'m> {
         file_contents.append(&mut build_title(file.title));
         
         for section in file.sections.iter() {
-            file_contents.append(&mut build_section_header(settings, section.name));
+            file_contents.append(&mut build_section_header(settings, section.name, section.depth));
     
             for block in section.blocks.iter() {
                 match block {
@@ -75,12 +75,12 @@ fn build_title<'a>(title: &'a str) -> Vec<cmark::Event<'a>> {
     ]
 }
 
-fn build_section_header<'a>(settings: &super::Settings, name: Option<&'a str>) -> Vec<cmark::Event<'a>> {
+fn build_section_header<'a>(settings: &super::Settings, name: Option<&'a str>, depth: usize) -> Vec<cmark::Event<'a>> {
     if let Some(name) = name {
         vec![
-            cmark::Event::Start(cmark::Tag::Header(4)),
+            cmark::Event::Start(cmark::Tag::Header(4 + (depth as i32))),
             cmark::Event::Text(Cow::Borrowed(name)),
-            cmark::Event::End(cmark::Tag::Header(4)),
+            cmark::Event::End(cmark::Tag::Header(4 + (depth as i32))),
         ]
     } else {
         vec![]

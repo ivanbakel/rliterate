@@ -67,6 +67,7 @@ pub struct LinkedFile<'a> {
 
 pub struct LinkedSection<'a> {
     pub id: usize,
+    pub depth: usize,
     pub name: Option<&'a str>,
     pub blocks: Vec<LinkedBlock<'a>>,
 }
@@ -186,6 +187,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
     let linked_sections : Vec<LinkedSection<'a>> = lit_file.sections.iter().map(|section| {
         LinkedSection {
             id: section.id,
+            depth: section.depth,
             name: section.name.as_str(),
             blocks: section.blocks.iter().map(|block| {
                 link_block(block, &mut link_map)       
