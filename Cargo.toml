@@ -2,4 +2,6 @@
 
 members = [
     "rliterate_lib",
+    "rliterate",
+    "cargo-lit",
 ]
