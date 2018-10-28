@@ -21,8 +21,11 @@
 
 extern crate cargo_metadata;
 extern crate env_logger;
+extern crate url;
 
 extern crate rliterate;
+
+use url::{Url};
 
 use std::env;
 use std::path::{Path};
@@ -39,12 +42,26 @@ fn main() -> Result<(), ProgramError> {
 
     let metadata = cargo_metadata::metadata(manifest_path.as_ref().map(Path::new))
             .map_err(|err| ProgramError::Other(err.description().to_owned()))?;
-
-    let lit_folder = Path::new(&metadata.workspace_root).join("lit");
-    let src_folder = Path::new(&metadata.workspace_root).join("src");
-
+    
     let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
 
+    if metadata.workspace_members.len() == 0 {
+        run_on_workspace(&metadata.workspace_root, &args)
+    } else {
+        for workspace_member in metadata.workspace_members.iter() {
+            let workspace_url = Url::parse(workspace_member.url()).unwrap();
+            run_on_workspace(workspace_url.path(), &args)?; 
+        }
+
+        Ok(())
+    }
+}
+
+fn run_on_workspace(path: &str, args: &clap::ArgMatches<'static>) -> Result<(), ProgramError> {
+    let lit_folder = Path::new(path).join("lit");
+    let src_folder = Path::new(path).join("src");
+    
+    
     let input_settings = input::InputSettings::recurse(&lit_folder);
     let output_settings = output::OutputSettings::from_args(&src_folder, &args)?;
     

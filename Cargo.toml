@@ -33,4 +33,4 @@ prettify-cmark = "*"
 maud = "0.19"
 
 cargo_metadata = "*"
-
+url = "*"
