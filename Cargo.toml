@@ -1,7 +1,7 @@
 [workspace]
 
 members = [
-    "rliterate_lib",
+    "rliterate_core",
     "rliterate",
     "cargo-lit",
 ]

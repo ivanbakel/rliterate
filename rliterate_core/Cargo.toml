@@ -1,5 +1,5 @@
 [package]
-name = "rliterate_lib"
+name = "rliterate_core"
 version = "0.1.0"
 authors = ["Isaac van Bakel <ivb@vanbakel.io>"]
 build = "build.rs"
