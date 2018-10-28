@@ -5,3 +5,6 @@ authors = ["Isaac van Bakel <ivb@vanbakel.io>"]
 edition = "2018"
 
 [dependencies]
+env_logger = "*"
+clap = "*"
+

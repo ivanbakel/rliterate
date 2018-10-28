@@ -25,8 +25,6 @@
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
-extern crate clap;
-#[macro_use]
 extern crate log;
 extern crate peg;
 extern crate subprocess;
@@ -36,7 +34,6 @@ extern crate maud;
 
 use std::path;
 
-pub mod args;
 mod parser;
 pub mod link;
 pub mod input;

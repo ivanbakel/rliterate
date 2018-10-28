@@ -121,3 +121,66 @@ pub const md : &'static str = "md";
 pub const markdown : &'static str = "markdown";
 pub const md_compiler : &'static str = "md_compiler";
 pub const output_type : &'static str = "output_type";
+    
+
+pub fn input_from_args(input_path: &path::Path, args: &ArgMatches<'static>) -> rliterate_lib::input::InputSettings {
+    rliterate_lib::input::InputSettings {
+        input_path: input_path.to_owned(),
+        recurse: args.is_present(recurse),
+    }
+}
+    
+pub fn output_from_args(output_dir : &Path, args: &ArgMatches<'static>) 
+  -> rliterate_lib::output::OutputResult<rliterate_lib::output::OutputSettings> {
+    trace!("Started parsing command-line arguments...");
+
+    let weave = if args.is_present(tangle) {
+        info!("Setting the tangle-only flag");
+        None
+    } else {
+        let md_compiler = args.value_of(md_compiler)
+            .map(|contents| contents.to_owned());
+
+        let weave_type = if let Some(weave_output_type) = args.value_of(weave_output) {
+            match weave_output_type {
+                markdown | md => weave::Type::Markdown,
+                html => weave::Type::HtmlViaMarkdown(md_compiler),
+                _ => return Err(OutputError::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
+            }
+        } else {
+            info!("No output type specified, defaulting to HTML");
+            weave::Type::HtmlViaMarkdown(md_compiler)
+        };
+
+        Some(weave::Settings {
+            weave_type: weave_type,
+            css: css::CssSettings::default(),
+        })
+    };
+
+    let tangle = if args.is_present(weave) {
+        info!("Setting the weave-only flag");
+        None
+    } else {
+        let line_numbers = args.value_of(line_numbers)
+            .map(|format_string| generate_line_numbers(format_string));
+
+        Some(rliterate_lib::output::tangle::Settings {
+            compile: args.is_present(compiler),
+            line_numbers: line_numbers,
+        })
+    };
+
+    trace!("Finished parsing command-line arguments");
+    Ok(rliterate_lib::output::OutputSettings {
+        out_dir: output_dir.to_path_buf(),
+        generate_output: !args.is_present(no_output),
+        weave: weave,
+        tangle: tangle,
+    })
+}
+
+fn generate_line_numbers(format_string: &str) -> (&'static Fn(usize) -> String) {
+    panic!()
+}
+

@@ -19,10 +19,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use args;
-
-use clap::{ArgMatches};
-
 use std::borrow::Cow;
 use std::path;
 
@@ -32,13 +28,6 @@ pub struct InputSettings {
 }
 
 impl InputSettings {
-    pub fn from_args(input_path: &path::Path, args: &ArgMatches<'static>) -> Self {
-        InputSettings {
-            input_path: input_path.to_owned(),
-            recurse: args.is_present(args::recurse),
-        }
-    }
-    
     pub fn recurse(input_path: &path::Path) -> Self {
         InputSettings {
             input_path: input_path.to_owned(),

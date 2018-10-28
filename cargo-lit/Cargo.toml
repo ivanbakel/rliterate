@@ -5,3 +5,5 @@ authors = ["Isaac van Bakel <ivb@vanbakel.io>"]
 edition = "2018"
 
 [dependencies]
+cargo_metadata = "*"
+url = "*"

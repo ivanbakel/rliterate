@@ -25,9 +25,7 @@ mod tangle;
 mod weave;
 
 use super::link;
-use super::args;
 
-use clap::{ArgMatches};
 use subprocess::{PopenError};
 use std::path::{Path, PathBuf};
 use std::io;
@@ -60,55 +58,6 @@ pub struct OutputSettings {
 }
 
 impl OutputSettings {
-    pub fn from_args(output_dir : &Path, args: &ArgMatches<'static>) -> OutputResult<Self> {
-        trace!("Started parsing command-line arguments...");
-
-        let weave = if args.is_present(args::tangle) {
-            info!("Setting the tangle-only flag");
-            None
-        } else {
-            let md_compiler = args.value_of(args::md_compiler)
-                .map(|contents| contents.to_owned());
-
-            let weave_type = if let Some(weave_output_type) = args.value_of(args::weave_output) {
-                match weave_output_type {
-                    args::markdown | args::md => weave::Type::Markdown,
-                    args::html => weave::Type::HtmlViaMarkdown(md_compiler),
-                    _ => return Err(OutputError::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
-                }
-            } else {
-                info!("No output type specified, defaulting to HTML");
-                weave::Type::HtmlViaMarkdown(md_compiler)
-            };
-
-            Some(weave::Settings {
-                weave_type: weave_type,
-                css: css::CssSettings::default(),
-            })
-        };
-
-        let tangle = if args.is_present(args::weave) {
-            info!("Setting the weave-only flag");
-            None
-        } else {
-            let line_numbers = args.value_of(args::line_numbers)
-                .map(|format_string| generate_line_numbers(format_string));
-
-            Some(tangle::Settings {
-                compile: args.is_present(args::compiler),
-                line_numbers: line_numbers,
-            })
-        };
-
-        trace!("Finished parsing command-line arguments");
-        Ok(OutputSettings {
-            out_dir: output_dir.to_path_buf(),
-            generate_output: !args.is_present(args::no_output),
-            weave: weave,
-            tangle: tangle,
-        })
-    }
-
     pub fn set_css(&mut self, settings: css::CssSettings) {
         if let Some(ref mut weave) = self.weave {
             weave.css = settings;
@@ -138,8 +87,3 @@ impl OutputSettings {
     }
 
 }
-
-fn generate_line_numbers(format_string: &str) -> (&'static Fn(usize) -> String) {
-    panic!()
-}
-
