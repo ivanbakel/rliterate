@@ -5,7 +5,7 @@ authors = ["Isaac van Bakel <ivb@vanbakel.io>"]
 edition = "2018"
 
 [[bin]]
-name = "rliterate"
+name = "literate"
 path = "src/main.rs"
 
 [[bin]]
