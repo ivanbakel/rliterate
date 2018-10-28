@@ -33,10 +33,10 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-pub type ParseResult<T> = Result<T, ParseError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
-pub enum ParseError {
+pub enum Error {
     MissingCommand(&'static str),
     DuplicateCommand,
     DuplicateCssCommand,
@@ -48,15 +48,15 @@ pub enum ParseError {
     FormatError,
 }
 
-impl From<grammar::ParseError> for ParseError {
-    fn from(err: grammar::ParseError) -> ParseError {
-        ParseError::GrammarError(err)
+impl From<grammar::ParseError> for Error {
+    fn from(err: grammar::ParseError) -> Error {
+        Error::GrammarError(err)
     }
 }
 
-impl From<io::Error> for ParseError {
-    fn from(err: io::Error) -> ParseError {
-        ParseError::FileSystem(err)
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        Error::FileSystem(err)
     }
 }
 
@@ -77,7 +77,7 @@ impl ParseState {
         }
     }
 
-    pub fn from_input(input_settings: input::InputSettings) -> ParseResult<Self> {
+    pub fn from_input(input_settings: input::InputSettings) -> Result<Self> {
         trace!("Loading files from input path \"{}\"", input_settings.input_path.to_string_lossy());
         let mut parse_state = ParseState::new();  
 
@@ -88,13 +88,13 @@ impl ParseState {
         Ok(parse_state)
     }
 
-    pub fn parse_file(&mut self, file_path: &PathBuf) -> ParseResult<()> {
+    pub fn parse_file(&mut self, file_path: &PathBuf) -> Result<()> {
         if self.in_progress.contains(file_path) {
             error!("Found an include loop when trying to load file \"{}\"", file_path.to_string_lossy());
-            Err(ParseError::FileLoop)
+            Err(Error::FileLoop)
         } else if self.file_map.contains_key(file_path) {
             error!("Ended up trying to parse file \"{}\" twice", file_path.to_string_lossy());
-            Err(ParseError::FileRepeat)
+            Err(Error::FileRepeat)
         } else { 
             trace!("Parsing file \"{}\"", file_path.to_string_lossy());
             let file_contents = fs::read_to_string(file_path)?; 
@@ -104,7 +104,7 @@ impl ParseState {
 
             let (lit_file, settings) = LitFile::parse(self, lit_blocks)?;
 
-            once!(self.css_settings, is_some, Some(settings), ParseError::ConflictingCss);
+            once!(self.css_settings, is_some, Some(settings), Error::ConflictingCss);
 
             self.in_progress.remove(file_path);
             info!("Finished parsing \"{}\"", file_path.to_string_lossy());
@@ -114,7 +114,7 @@ impl ParseState {
     }
 }
 
-fn get_input_files(input_path: &Path, recurse: bool) -> ParseResult<Vec<PathBuf>> {
+fn get_input_files(input_path: &Path, recurse: bool) -> Result<Vec<PathBuf>> {
     let path_buf = input_path.to_path_buf();
 
     if path_buf.is_file() {
@@ -143,16 +143,16 @@ fn get_input_files(input_path: &Path, recurse: bool) -> ParseResult<Vec<PathBuf>
 
         Ok(paths)
     } else {
-        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Could not process input path: {}", input_path.to_string_lossy()))))
+        Err(Error::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Could not process input path: {}", input_path.to_string_lossy()))))
     }
 }
 
-pub fn get_input_file(input_path: &Path) -> ParseResult<PathBuf> {
+pub fn get_input_file(input_path: &Path) -> Result<PathBuf> {
     let path_buf = input_path.to_path_buf();
 
     if path_buf.is_file() {
         Ok(path_buf)
     } else {
-        Err(ParseError::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Input path was not a file: {}", input_path.to_string_lossy()))))
+        Err(Error::FileSystem(io::Error::new(io::ErrorKind::Other, format!("Input path was not a file: {}", input_path.to_string_lossy()))))
     }
 }

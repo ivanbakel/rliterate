@@ -19,7 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use output::{OutputResult};
+use output;
 use output::css;
 
 use maud::html;
@@ -31,7 +31,7 @@ use std::io::{Write};
 static default_css_style : &'static str = include_str!("default.css");
 static katex_html : &'static str = include_str!("katex.html");
 
-pub fn print(mut file: fs::File, html: String, title: &str, css: &css::CssSettings) -> OutputResult<()> {
+pub fn print(mut file: fs::File, html: String, title: &str, css: &css::CssSettings) -> output::Result<()> {
     let markup = html! {
         DOCTYPE;
         head {

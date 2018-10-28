@@ -29,15 +29,15 @@ use std::path::{Path};
 
 use rliterate_runtime::args;
 use rliterate_core::input;
-use rliterate_core::{ProgramError, run};
+use rliterate_core::{run};
 
-fn main() -> Result<(), ProgramError> {
+fn main() -> rliterate_core::Result<()> {
     env_logger::init();
 
     let manifest_path = env::current_dir().ok().map(|path| path.join("Cargo.toml"));
 
     let metadata = cargo_metadata::metadata(manifest_path.as_ref().map(Path::new))
-            .map_err(|err| ProgramError::Other(err.description().to_owned()))?;
+            .map_err(|err| rliterate_core::Error::Other(err.description().to_owned()))?;
     
     let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
 
@@ -53,7 +53,7 @@ fn main() -> Result<(), ProgramError> {
     }
 }
 
-fn run_on_workspace(path: &str, args: &clap::ArgMatches<'static>) -> Result<(), ProgramError> {
+fn run_on_workspace(path: &str, args: &clap::ArgMatches<'static>) -> rliterate_core::Result<()> {
     let lit_folder = Path::new(path).join("lit");
     let src_folder = Path::new(path).join("src");
     

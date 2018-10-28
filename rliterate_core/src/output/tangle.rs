@@ -20,7 +20,7 @@
  */
 
 use parser::{CompilerSettings};
-use output::{OutputResult, OutputError};
+use output;
 use output::canon::{CanonicalCodeBlock, BlockMap};
 
 use subprocess;
@@ -32,7 +32,7 @@ use std::io::{Write};
 pub fn tangle_blocks<'a>(settings: &Settings, 
                          canonical_code_blocks: &BlockMap, 
                          out_dir: &Path,
-                         compiler: &'a Option<CompilerSettings>) -> OutputResult<()> {
+                         compiler: &'a Option<CompilerSettings>) -> output::Result<()> {
     trace!("Starting the tangle...");
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
@@ -65,7 +65,7 @@ impl Settings {
                       mut file: fs::File,
                       name: &'a str, 
                       file_block: &CanonicalCodeBlock<'a>, 
-                      blocks: &BlockMap<'a>) -> OutputResult<()> {
+                      blocks: &BlockMap<'a>) -> output::Result<()> {
         trace!("Printing out \"{}\"...", name);
         self.print_block(&mut file, name, file_block, blocks, vec![], vec![])?;
         trace!("Finished printing out \"{}\"", name);
@@ -78,7 +78,7 @@ impl Settings {
                        block: &CanonicalCodeBlock<'a>, 
                        blocks: &BlockMap<'a>,
                        prependix: Vec<&'a str>,
-                       appendix: Vec<&'a str>) -> OutputResult<()> {
+                       appendix: Vec<&'a str>) -> output::Result<()> {
         if block.print_header() {
             Self::print_line(file, &prependix[..], &format!("// {}", name), &appendix[..]);
         }
@@ -120,7 +120,7 @@ impl Settings {
         writeln!(file, "");
     }
 
-    fn compile_file(&self, compiler_settings: &Option<CompilerSettings>, output_file_path: &Path) -> OutputResult<()> {
+    fn compile_file(&self, compiler_settings: &Option<CompilerSettings>, output_file_path: &Path) -> output::Result<()> {
         if let Some(ref compiler_settings) = compiler_settings {
             trace!("Compiling \"{}\"...", output_file_path.to_string_lossy());
             let compiler_result = subprocess::Exec::shell(&compiler_settings.command)
@@ -129,12 +129,12 @@ impl Settings {
             trace!("Finished compiling \"{}\"", output_file_path.to_string_lossy());
             match compiler_result {
                 subprocess::ExitStatus::Exited(0) => Ok(()),
-                subprocess::ExitStatus::Exited(code) => Err(OutputError::FailedCompiler(code)),
-                subprocess::ExitStatus::Signaled(signal) => Err(OutputError::TerminatedCompiler(signal)),
+                subprocess::ExitStatus::Exited(code) => Err(output::Error::FailedCompiler(code)),
+                subprocess::ExitStatus::Signaled(signal) => Err(output::Error::TerminatedCompiler(signal)),
                 _ => unreachable!(),
             }
         } else {
-            Err(OutputError::NoCompilerCommand)
+            Err(output::Error::NoCompilerCommand)
         }
     }
 }

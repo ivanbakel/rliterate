@@ -23,7 +23,7 @@ mod markdown;
 use self::markdown::{MarkDown};
 mod html;
 
-use output::{OutputResult, OutputError};
+use output;
 use output::css;
 use output::canon::{BlockMap};
 use link::{LinkedFile, LinkedBlock, LinkedLine};
@@ -46,7 +46,7 @@ pub enum Type {
     HtmlViaMarkdown(Option<String>),
 }
 
-pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>, block_map: &BlockMap, out_dir: &Path) -> OutputResult<()> {
+pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>, block_map: &BlockMap, out_dir: &Path) -> output::Result<()> {
     trace!("Starting the weave...");
     match settings.weave_type {
         Type::HtmlViaMarkdown(ref maybe_command) => {
@@ -82,13 +82,13 @@ pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file
     Ok(())
 }
 
-impl From<subprocess::PopenError> for OutputError {
-    fn from(err: subprocess::PopenError) -> OutputError {
-        OutputError::BadCommand(err)
+impl From<subprocess::PopenError> for output::Error {
+    fn from(err: subprocess::PopenError) -> output::Error {
+        output::Error::BadCommand(err)
     }
 }
 
-fn call_markdown_compiler<'m>(command: &str, markdown: MarkDown<'m>) -> OutputResult<String> {
+fn call_markdown_compiler<'m>(command: &str, markdown: MarkDown<'m>) -> output::Result<String> {
     // Setup the markdown to be fed into the command
     let mut printed_markdown = String::new();
     
@@ -107,13 +107,13 @@ fn call_markdown_compiler<'m>(command: &str, markdown: MarkDown<'m>) -> OutputRe
 
     match process_result.exit_status {
         subprocess::ExitStatus::Exited(0) => Ok(process_result.stdout_str()),
-        subprocess::ExitStatus::Exited(code) => Err(OutputError::FailedCommand(code)),
-        subprocess::ExitStatus::Signaled(signal) => Err(OutputError::TerminatedCommand(signal)),
+        subprocess::ExitStatus::Exited(code) => Err(output::Error::FailedCommand(code)),
+        subprocess::ExitStatus::Signaled(signal) => Err(output::Error::TerminatedCommand(signal)),
         _ => unreachable!(),
     }
 }
 
-fn compile_markdown<'m>(markdown: MarkDown<'m>) -> OutputResult<String> {
+fn compile_markdown<'m>(markdown: MarkDown<'m>) -> output::Result<String> {
     //TODO: Once the relevant pull request is merged on pulldown_cmark, change this to write
     //directly to the file
     
@@ -127,7 +127,7 @@ fn compile_markdown<'m>(markdown: MarkDown<'m>) -> OutputResult<String> {
     Ok(compiled_html)
 }
 
-fn print_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> OutputResult<()> {
+fn print_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> output::Result<()> {
     let mut pretty_printer = prettify_cmark::PrettyPrinter::new(String::new());
     pretty_printer.push_events(markdown.into_iter()).unwrap();
     write!(file, "{}", pretty_printer.into_inner());

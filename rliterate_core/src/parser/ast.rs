@@ -19,7 +19,8 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use parser::{ParseState, ParseResult, ParseError, get_input_file};
+use parser;
+use parser::{ParseState, get_input_file};
 use parser::grammar::{LitBlock, CodeBlock, Command, BlockModifier};
 use output::css::{CustomCss, CssSettings};
 
@@ -31,7 +32,7 @@ mod macros {
     macro_rules! once {
         ( $variable:expr, $ifnothing:expr ) => {
             if $variable.is_some() {
-                return Err(ParseError::DuplicateCommand);
+                return Err(parser::Error::DuplicateCommand);
             } else {
                 $variable = Some($ifnothing);
             }
@@ -49,7 +50,7 @@ mod macros {
     macro_rules! require {
         ( $($variable:ident),* ) => {
             $(
-                let $variable = $variable.ok_or(ParseError::MissingCommand(stringify!($variable)))?;
+                let $variable = $variable.ok_or(parser::Error::MissingCommand(stringify!($variable)))?;
             )*
         };
     }
@@ -66,7 +67,7 @@ pub struct LitFile {
 }
 
 impl LitFile {
-    pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> ParseResult<(Self, CssSettings)> {
+    pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> parser::Result<(Self, CssSettings)> {
         let mut title = None;
         let mut code_type_and_file_extension = None;
         let mut comment_type = None;
@@ -123,10 +124,10 @@ impl LitFile {
                         is_book = true;
                     },
                     Command::AddCss(css_file) => {
-                        once!(custom_css, is_not_none, CustomCss::Add(css_file.to_owned()), ParseError::DuplicateCssCommand)
+                        once!(custom_css, is_not_none, CustomCss::Add(css_file.to_owned()), parser::Error::DuplicateCssCommand)
                     },
                     Command::OverwriteCss(css_file) => {
-                        once!(custom_css, is_not_none, CustomCss::Overwrite(css_file.to_owned()), ParseError::DuplicateCssCommand)
+                        once!(custom_css, is_not_none, CustomCss::Overwrite(css_file.to_owned()), parser::Error::DuplicateCssCommand)
                     },
                     Command::Colorscheme(css_file) => {
                         once!(custom_colorscheme, css_file.to_owned())

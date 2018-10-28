@@ -26,7 +26,7 @@ use std::collections::{HashMap};
 use std::path::{PathBuf};
 
 mod grammar {
-    use super::*;
+    use super::{LinkPart, LinkedLine};
 
     include!(concat!(env!("OUT_DIR"), "/parsing.rs"));
 }
@@ -36,7 +36,7 @@ pub struct LinkState<'a> {
 }
 
 impl<'a> LinkState<'a> {
-    pub fn link(file_map: &'a parser::FileMap) -> LinkResult<Self> {
+    pub fn link(file_map: &'a parser::FileMap) -> Result<Self> {
         trace!("Started linking files...");
         let mut linked_file_map = HashMap::new();
     
@@ -173,15 +173,15 @@ impl<'a, 'b : 'a> Iterator for SplitLinks<'a, 'b> {
     }
 }
 
-type LinkResult<T> = Result<T, LinkError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
-pub enum LinkError {
+pub enum Error {
     InfiniteCodeLoop,
     BadLinkName,
 }
 
-fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
+fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
     let mut link_map = LinkMap::new();
     
     let linked_sections : Vec<LinkedSection<'a>> = lit_file.sections.iter().map(|section| {
@@ -209,7 +209,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> LinkResult<LinkedFile<'a>> {
     for link in all_links {
         if !(link_map.contains_key(link)) {
             error!("Found a link to \"{}\", but that block doesn't exist", link);
-            Err(LinkError::BadLinkName)?;
+            Err(Error::BadLinkName)?;
         }
     }
 

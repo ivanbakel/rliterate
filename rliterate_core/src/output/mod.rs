@@ -30,10 +30,10 @@ use subprocess::{PopenError};
 use std::path::{Path, PathBuf};
 use std::io;
 
-pub type OutputResult<T> = Result<T, OutputError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug)]
-pub enum OutputError {
+pub enum Error {
     BadCLIArgument(String),
     FileSystem(io::Error),
     BadCommand(PopenError),
@@ -44,9 +44,9 @@ pub enum OutputError {
     TerminatedCompiler(u8),
 }
 
-impl From<io::Error> for OutputError {
-    fn from(io_error: io::Error) -> OutputError {
-        OutputError::FileSystem(io_error)
+impl From<io::Error> for Error {
+    fn from(io_error: io::Error) -> Error {
+        Error::FileSystem(io_error)
     }
 }
 
@@ -64,7 +64,7 @@ impl OutputSettings {
         }
     }
 
-    pub fn process<'a>(&self, link_state: link::LinkState<'a>) -> OutputResult<()> {
+    pub fn process<'a>(&self, link_state: link::LinkState<'a>) -> Result<()> {
         trace!("Started outputting files...");
         for (path, linked_file) in link_state.file_map.iter() {
             let canonical_code_blocks = canon::canonicalise_code_blocks(&linked_file.sections[..]);

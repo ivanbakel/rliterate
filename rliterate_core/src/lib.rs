@@ -39,7 +39,9 @@ pub mod link;
 pub mod input;
 pub mod output;
 
-pub fn run(input_settings: input::InputSettings, mut output_settings: output::OutputSettings) -> Result<(), ProgramError> {
+pub type Result<T> = std::result::Result<T, Error>;
+
+pub fn run(input_settings: input::InputSettings, mut output_settings: output::OutputSettings) -> Result<()> {
     let parse_state = parser::ParseState::from_input(input_settings)?;
     
     let linked_state = link::LinkState::link(&parse_state.file_map)?;
@@ -53,28 +55,28 @@ pub fn run(input_settings: input::InputSettings, mut output_settings: output::Ou
 }
 
 #[derive(Debug)]
-pub enum ProgramError {
-    ParserError(parser::ParseError),
-    LinkerError(link::LinkError),
-    OutputError(output::OutputError),
+pub enum Error {
+    Parser(parser::Error),
+    Linker(link::Error),
+    Output(output::Error),
     Other(String),
 }
 
-impl From<parser::ParseError> for ProgramError {
-    fn from(err: parser::ParseError) -> Self {
-        ProgramError::ParserError(err)
+impl From<parser::Error> for Error {
+    fn from(err: parser::Error) -> Self {
+        Error::Parser(err)
     }
 }
 
-impl From<link::LinkError> for ProgramError {
-    fn from(err: link::LinkError) -> Self {
-        ProgramError::LinkerError(err)
+impl From<link::Error> for Error {
+    fn from(err: link::Error) -> Self {
+        Error::Linker(err)
     }
 }
 
-impl From<output::OutputError> for ProgramError {
-    fn from(err: output::OutputError) -> Self {
-        ProgramError::OutputError(err)
+impl From<output::Error> for Error {
+    fn from(err: output::Error) -> Self {
+        Error::Output(err)
     }
 }
 

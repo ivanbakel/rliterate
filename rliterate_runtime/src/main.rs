@@ -24,10 +24,10 @@ extern crate env_logger;
 use std::env;
 use std::path;
 
-use rliterate_core::{ProgramError, run};
+use rliterate_core::{run};
 use rliterate_runtime::args;
 
-fn main() -> Result<(), ProgramError> {
+fn main() -> rliterate_core::Result<()> {
     env_logger::init();
 
     let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();

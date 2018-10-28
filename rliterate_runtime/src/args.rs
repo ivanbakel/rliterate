@@ -134,7 +134,7 @@ pub fn input_from_args(input_path: &path::Path, args: &ArgMatches<'static>) -> r
 }
     
 pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>) 
-  -> rliterate_core::output::OutputResult<rliterate_core::output::OutputSettings> {
+  -> rliterate_core::output::Result<rliterate_core::output::OutputSettings> {
     trace!("Started parsing command-line arguments...");
 
     let weave = if args.is_present(constants::tangle) {
@@ -148,7 +148,7 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
             match weave_output_type {
                 constants::markdown | constants::md => rliterate_core::output::weave::Type::Markdown,
                 constants::html => rliterate_core::output::weave::Type::HtmlViaMarkdown(md_compiler),
-                _ => return Err(rliterate_core::output::OutputError::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
+                _ => return Err(rliterate_core::output::Error::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
             }
         } else {
             info!("No output type specified, defaulting to HTML");
