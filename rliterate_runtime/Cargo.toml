@@ -15,9 +15,9 @@ path = "src/cargo.rs"
 [dependencies]
 rliterate_core = { version = "*", path = "../rliterate_core" }
 
-log = "*"
-env_logger = "*"
-clap = "*"
-cargo_metadata = "*"
-url = "*"
+log = "0.4"
+env_logger = "0.5"
+clap = "^2.32"
+cargo_metadata = "0.6"
+url = "^1.7"
 
