@@ -19,34 +19,48 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-extern crate rliterate_core;
+extern crate cargo_metadata;
+extern crate url;
 
-extern crate env_logger;
+use url::{Url};
 
 use std::env;
-use std::path;
+use std::path::{Path};
 
-use rliterate::args;
-use rliterate::input;
-use rliterate::output;
-use rliterate::{ProgramError, run};
-
-pub mod args;
+use rliterate_runtime::args;
+use rliterate_core::input;
+use rliterate_core::{ProgramError, run};
 
 fn main() -> Result<(), ProgramError> {
     env_logger::init();
 
+    let manifest_path = env::current_dir().ok().map(|path| path.join("Cargo.toml"));
+
+    let metadata = cargo_metadata::metadata(manifest_path.as_ref().map(Path::new))
+            .map_err(|err| ProgramError::Other(err.description().to_owned()))?;
+    
     let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
 
-    let input_path = path::Path::new(args.value_of(args::input).unwrap());
-    let output_path = args.value_of(args::output_directory)
-            .map_or(
-                env::current_dir().unwrap(),
-                |out_dir| path::Path::new(out_dir).to_path_buf()
-            );
+    if metadata.workspace_members.len() == 0 {
+        run_on_workspace(&metadata.workspace_root, &args)
+    } else {
+        for workspace_member in metadata.workspace_members.iter() {
+            let workspace_url = Url::parse(workspace_member.url()).unwrap();
+            run_on_workspace(workspace_url.path(), &args)?; 
+        }
 
-    let input_settings = input::InputSettings::from_args(input_path, &args);
-    let output_settings = output::OutputSettings::from_args(&output_path, &args)?;
+        Ok(())
+    }
+}
 
+fn run_on_workspace(path: &str, args: &clap::ArgMatches<'static>) -> Result<(), ProgramError> {
+    let lit_folder = Path::new(path).join("lit");
+    let src_folder = Path::new(path).join("src");
+    
+    
+    let input_settings = input::InputSettings::recurse(&lit_folder);
+    let output_settings = args::output_from_args(&src_folder, &args)?;
+    
     run(input_settings, output_settings)
 }
+

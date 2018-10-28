@@ -1,0 +1,23 @@
+[package]
+name = "rliterate_runtime"
+version = "0.1.0"
+authors = ["Isaac van Bakel <ivb@vanbakel.io>"]
+edition = "2018"
+
+[[bin]]
+name = "rliterate"
+path = "src/main.rs"
+
+[[bin]]
+name = "cargo-lit"
+path = "src/cargo.rs"
+
+[dependencies]
+rliterate_core = { version = "*", path = "../rliterate_core" }
+
+log = "*"
+env_logger = "*"
+clap = "*"
+cargo_metadata = "*"
+url = "*"
+

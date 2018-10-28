@@ -21,8 +21,8 @@
 
 pub mod css;
 mod canon;
-mod tangle;
-mod weave;
+pub mod tangle;
+pub mod weave;
 
 use super::link;
 
@@ -30,7 +30,7 @@ use subprocess::{PopenError};
 use std::path::{Path, PathBuf};
 use std::io;
 
-type OutputResult<T> = Result<T, OutputError>;
+pub type OutputResult<T> = Result<T, OutputError>;
 
 #[derive(Debug)]
 pub enum OutputError {
@@ -51,10 +51,10 @@ impl From<io::Error> for OutputError {
 }
 
 pub struct OutputSettings {
-    out_dir: PathBuf,
-    generate_output: bool,
-    weave: Option<weave::Settings>,
-    tangle: Option<tangle::Settings>, 
+    pub out_dir: PathBuf,
+    pub generate_output: bool,
+    pub weave: Option<weave::Settings>,
+    pub tangle: Option<tangle::Settings>, 
 }
 
 impl OutputSettings {
