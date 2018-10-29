@@ -39,7 +39,10 @@ fn main() -> rliterate_core::Result<()> {
     let metadata = cargo_metadata::metadata(manifest_path.as_ref().map(Path::new))
             .map_err(|err| rliterate_core::Error::Other(err.description().to_owned()))?;
     
-    let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
+    let args : clap::ArgMatches<'static> = args::get_cargo_arg_parser()
+        // The first argument is 'cargo', the second argument is 'lit', the binary name
+        // So we skip 'cargo', and proceed as normal
+        .get_matches_from(env::args_os().skip(1));
 
     if metadata.workspace_members.len() == 0 {
         run_on_workspace(&metadata.workspace_root, &args)
