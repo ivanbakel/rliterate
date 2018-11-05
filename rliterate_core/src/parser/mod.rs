@@ -104,7 +104,9 @@ impl ParseState {
 
             let (lit_file, settings) = LitFile::parse(self, lit_blocks)?;
 
-            once!(self.css_settings, is_some, Some(settings), Error::ConflictingCss);
+            if !settings.is_default() {
+                once!(self.css_settings, is_some, Some(settings), Error::ConflictingCss);
+            }
 
             self.in_progress.remove(file_path);
             info!("Finished parsing \"{}\"", file_path.to_string_lossy());
