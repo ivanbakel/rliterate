@@ -22,7 +22,7 @@
 use parser;
 use parser::{LitFile, Block, BlockModifier, CompilerSettings};
 
-use std::collections::{HashMap};
+use std::collections::{HashMap, VecDeque};
 use std::path::{PathBuf};
 
 mod grammar {
@@ -202,15 +202,50 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
             })
         })
     }).collect();
-
-    //TODO: Detect a cycle!
-    warn!("Currently, no cycle detection exists - you may hang later!");
-
+    
     for link in all_links {
         if !(link_map.contains_key(link)) {
             error!("Found a link to \"{}\", but that block doesn't exist", link);
             Err(Error::BadLinkName)?;
         }
+    }
+
+    {
+      let mut recursion_stack : VecDeque<&'a str> = VecDeque::new();
+
+      fn check_recursion<'str, I>(links: I, recursion_stack: &mut VecDeque<&'str str>, link_map: &LinkMap<'str>) -> Result<()>
+        where I: Iterator, I::Item: std::ops::Deref<Target=&'str str> {
+        for link in links {
+          // If the stack already contains the link, we have a back-edge
+          if recursion_stack.contains(&link) {
+            // We push this on to make clear what the recursive element is
+            // when rendering the below error message
+            recursion_stack.push_back(*link);
+
+            let (front, back) = recursion_stack.as_slices();
+            let mut recursion_path = front.join(" -> ");
+            let back_path = back.join(" -> ");
+            
+            if back_path.len() != 0 {
+              recursion_path.push_str(" -> ");
+              recursion_path.push_str(&back_path);
+            }
+
+
+            error!("Found a recursive series of links: {}", recursion_path); 
+            return Err(Error::InfiniteCodeLoop);
+          } else {
+            recursion_stack.push_back(*link);
+            // We checked above that all links are valid - so unwrapping is safe
+            check_recursion(link_map.get(*link).unwrap().iter(), recursion_stack, link_map)?;
+            recursion_stack.pop_back();
+          }
+        }
+
+        Ok(())
+      };
+
+      check_recursion(link_map.keys(), &mut recursion_stack, &link_map)?;
     }
 
     Ok(LinkedFile {
