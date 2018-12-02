@@ -80,7 +80,7 @@ impl Settings {
                        prependix: Vec<&'a str>,
                        appendix: Vec<&'a str>) -> output::Result<()> {
         if block.print_header() {
-            Self::print_line(file, &prependix[..], &format!("// {}", name), &appendix[..]);
+            Self::print_line(file, &prependix[..], &format!("// {}", name), &appendix[..])?;
         }
 
         for line in block.contents() {
@@ -99,25 +99,27 @@ impl Settings {
             }
 
             if !printed_link {
-                Self::print_line(file, &prependix[..], line.get_text(), &appendix[..]);
+                Self::print_line(file, &prependix[..], line.get_text(), &appendix[..])?;
             }
         }
 
         Ok(())
     }
 
-    fn print_line(file: &mut fs::File, prependix: &[&str], line: &str, appendix: &[&str]) {
+    fn print_line(file: &mut fs::File, prependix: &[&str], line: &str, appendix: &[&str]) -> output::Result<()> {
         for pre in prependix {
-            write!(file, "{}", pre);
+            write!(file, "{}", pre)?;
         }
 
-        write!(file, "{}", line);
+        write!(file, "{}", line)?;
 
         for post in appendix {
-            write!(file, "{}", post);
+            write!(file, "{}", post)?;
         }
 
-        writeln!(file, "");
+        writeln!(file, "")?;
+
+        Ok(())
     }
 
     fn compile_file(&self, compiler_settings: &Option<CompilerSettings>, output_file_path: &Path) -> output::Result<()> {

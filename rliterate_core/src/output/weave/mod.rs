@@ -130,6 +130,6 @@ fn compile_markdown<'m>(markdown: MarkDown<'m>) -> output::Result<String> {
 fn print_markdown<'m>(mut file: fs::File, markdown: MarkDown<'m>) -> output::Result<()> {
     let mut pretty_printer = prettify_cmark::PrettyPrinter::new(String::new());
     pretty_printer.push_events(markdown.into_iter()).unwrap();
-    write!(file, "{}", pretty_printer.into_inner());
+    write!(file, "{}", pretty_printer.into_inner())?;
     Ok(())
 }
