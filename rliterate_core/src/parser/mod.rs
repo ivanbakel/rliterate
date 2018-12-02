@@ -63,7 +63,7 @@ impl From<io::Error> for Error {
 pub struct ParseState {    
     in_progress: HashSet<PathBuf>,
     pub file_map: FileMap,
-    pub css_settings: Option<css::Settings>,
+    pub css_settings: Option<css::Globals>,
 }
 
 pub type FileMap = HashMap<PathBuf, LitFile>;

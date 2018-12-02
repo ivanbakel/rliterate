@@ -157,6 +157,7 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
 
         Some(rliterate_core::output::weave::Settings {
             weave_type: weave_type,
+            out_dir: output_dir.to_path_buf(),
             css: rliterate_core::output::css::CssSettings::default(),
         })
     };
@@ -170,13 +171,13 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
 
         Some(rliterate_core::output::tangle::Settings {
             compile: args.is_present(constants::compiler),
+            out_dir: output_dir.to_path_buf(),
             line_numbers: line_numbers,
         })
     };
 
     trace!("Finished parsing command-line arguments");
     Ok(rliterate_core::output::OutputSettings {
-        out_dir: output_dir.to_path_buf(),
         generate_output: !args.is_present(constants::no_output),
         weave: weave,
         tangle: tangle,

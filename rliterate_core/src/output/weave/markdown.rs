@@ -35,7 +35,7 @@ pub struct MarkDown<'m> {
 }
 
 impl<'m> MarkDown<'m> {
-    pub fn build(settings: &super::Settings, file: &'m LinkedFile<'m>, block_map: &'m BlockMap) -> Self {
+    pub fn build(settings: &super::Globals, file: &'m LinkedFile<'m>, block_map: &'m BlockMap) -> Self {
         let mut file_contents : Vec<cmark::Event<'m>> = vec![];
     
         file_contents.append(&mut build_title(file.title));
@@ -75,7 +75,7 @@ fn build_title<'a>(title: &'a str) -> Vec<cmark::Event<'a>> {
     ]
 }
 
-fn build_section_header<'a>(settings: &super::Settings, name: Option<&'a str>, depth: usize) -> Vec<cmark::Event<'a>> {
+fn build_section_header<'a>(settings: &super::Globals, name: Option<&'a str>, depth: usize) -> Vec<cmark::Event<'a>> {
     if let Some(name) = name {
         vec![
             cmark::Event::Start(cmark::Tag::Header(4 + (depth as i32))),
@@ -87,7 +87,7 @@ fn build_section_header<'a>(settings: &super::Settings, name: Option<&'a str>, d
     }
 }
 
-fn build_code_block<'a>(settings: &super::Settings, name: &'a str, lines: &'a [LinkedLine<'a>], block_map: &'a BlockMap, code_type: &'a str) -> Vec<cmark::Event<'a>> {
+fn build_code_block<'a>(settings: &super::Globals, name: &'a str, lines: &'a [LinkedLine<'a>], block_map: &'a BlockMap, code_type: &'a str) -> Vec<cmark::Event<'a>> {
     let mut code_block : Vec<cmark::Event<'a>> = vec![];
 
     code_block.push(cmark::Event::Start(cmark::Tag::CodeBlock(Cow::Borrowed(code_type))));

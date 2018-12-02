@@ -25,25 +25,23 @@ use output::canon::{CanonicalCodeBlock, BlockMap};
 
 use subprocess;
 
-use std::path::{Path};
+use std::path::{PathBuf, Path};
 use std::fs;
 use std::io::{Write};
 
-pub fn tangle_blocks<'a>(settings: &Settings, 
-                         canonical_code_blocks: &BlockMap, 
-                         out_dir: &Path,
-                         compiler: &'a Option<CompilerSettings>) -> output::Result<()> {
+pub fn tangle_blocks<'a>(settings: Settings<'a>, 
+                         canonical_code_blocks: &BlockMap) -> output::Result<()> {
     trace!("Starting the tangle...");
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
-        let output_file_path = out_dir.join(name);
+        let output_file_path = settings.global_settings.out_dir.join(name);
         
         info!("Found a file block \"{}\", writing to \"{}\"", name, output_file_path.to_string_lossy());
         // To avoid cluttering a workspace during linting, we do not produce the tangle output when
         // compiling
-        if settings.compile {
+        if settings.global_settings.compile {
             //Compile the file
-            settings.compile_file(compiler, &output_file_path)?;
+            settings.compile_file(settings.compiler, &output_file_path)?;
         } else {
             // Print the file out
             let to_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(&output_file_path)?;
@@ -55,12 +53,18 @@ pub fn tangle_blocks<'a>(settings: &Settings,
     Ok(())
 }
 
-pub struct Settings {
-    pub compile: bool,
+pub struct Settings<'borrow> {
+    pub global_settings: &'borrow Globals,
     pub line_numbers: Option<&'static Fn(usize) -> String>,
+    pub compiler: &'borrow Option<CompilerSettings>,
 }
 
-impl Settings {
+pub struct Globals {
+    pub compile: bool,
+    pub out_dir: PathBuf,
+}
+
+impl<'borrow> Settings<'borrow> {
     fn print_file<'a>(&self,
                       mut file: fs::File,
                       name: &'a str, 

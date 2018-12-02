@@ -36,9 +36,10 @@ use std::path::{PathBuf, Path};
 use std::fs;
 use std::io::{Write};
 
-pub struct Settings {
+pub struct Globals {
     pub weave_type: Type,
-    pub css: css::Settings,
+    pub out_dir: PathBuf,
+    pub css: css::Globals,
 }
 
 pub enum Type {
@@ -46,13 +47,13 @@ pub enum Type {
     HtmlViaMarkdown(Option<String>),
 }
 
-pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file: &LinkedFile<'a>, block_map: &BlockMap, out_dir: &Path) -> output::Result<()> {
+pub fn weave_file_with_blocks<'a>(settings: &Globals, file_name: &PathBuf, file: &LinkedFile<'a>, block_map: &BlockMap) -> output::Result<()> {
     trace!("Starting the weave...");
     match settings.weave_type {
         Type::HtmlViaMarkdown(ref maybe_command) => {
             let markdown = MarkDown::build(settings, file, block_map);
 
-            let mut html_filename = out_dir.join(file_name.file_stem().unwrap());
+            let mut html_filename = settings.out_dir.join(file_name.file_stem().unwrap());
             html_filename.set_extension("html");
             info!("Writing HTML documentation to \"{}\"", html_filename.to_string_lossy());
 
@@ -69,7 +70,7 @@ pub fn weave_file_with_blocks<'a>(settings: &Settings, file_name: &PathBuf, file
         Type::Markdown => {
             let markdown = MarkDown::build(settings, file, block_map);
 
-            let mut md_filename = out_dir.join(file_name.file_stem().unwrap());
+            let mut md_filename = settings.out_dir.join(file_name.file_stem().unwrap());
             md_filename.set_extension("md");
             info!("Writing Markdown documentation to \"{}\"", md_filename.to_string_lossy());
 

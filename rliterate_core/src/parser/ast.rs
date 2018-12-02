@@ -68,7 +68,7 @@ pub struct LitFile {
 }
 
 impl LitFile {
-    pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> parser::Result<(Self, css::Settings)> {
+    pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> parser::Result<(Self, css::Globals)> {
         let mut title = None;
         let mut code_type_and_file_extension = None;
         let mut comment_type = None;
@@ -192,7 +192,7 @@ impl LitFile {
                 compiler: compiler_settings,
                 book_status: book_status,
             },
-            css::Settings {
+            css::Globals {
                 custom_css: custom_css,
                 custom_colorscheme: custom_colorscheme
             }))

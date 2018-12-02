@@ -31,7 +31,7 @@ use std::io::{Write};
 static default_css_style : &'static str = include_str!("default.css");
 static katex_html : &'static str = include_str!("katex.html");
 
-pub fn print(mut file: fs::File, html: String, title: &str, css: &css::Settings) -> output::Result<()> {
+pub fn print(mut file: fs::File, html: String, title: &str, css: &css::Globals) -> output::Result<()> {
     let markup = html! {
         (DOCTYPE);
         head {

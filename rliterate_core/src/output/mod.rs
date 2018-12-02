@@ -50,15 +50,14 @@ impl From<io::Error> for Error {
     }
 }
 
-pub struct Settings {
-    pub out_dir: PathBuf,
+pub struct Globals {
     pub generate_output: bool,
-    pub weave: Option<weave::Settings>,
-    pub tangle: Option<tangle::Settings>, 
+    pub weave: Option<weave::Globals>,
+    pub tangle: Option<tangle::Globals>, 
 }
 
-impl Settings {
-    pub fn set_css(&mut self, settings: css::Settings) {
+impl Globals {
+    pub fn set_css(&mut self, settings: css::Globals) {
         if let Some(ref mut weave) = self.weave {
             weave.css = settings;
         }
@@ -71,12 +70,17 @@ impl Settings {
 
             if self.generate_output {
                 trace!("Generating output for \"{}\"...", path.to_string_lossy());
-                if let Some(ref settings) = self.tangle {
-                    tangle::tangle_blocks(settings, &canonical_code_blocks, &self.out_dir, &linked_file.compiler)?;
+                if let Some(ref global_settings) = self.tangle {
+                    let file_level_settings = tangle::Settings {
+                      global_settings,
+                      line_numbers: None,
+                      compiler: &linked_file.compiler,
+                    };
+                    tangle::tangle_blocks(file_level_settings, &canonical_code_blocks)?;
                 }
 
-                if let Some(ref weave_type) = self.weave {
-                    weave::weave_file_with_blocks(weave_type, path, linked_file, &canonical_code_blocks, &self.out_dir)?;
+                if let Some(ref global_settings) = self.weave {
+                    weave::weave_file_with_blocks(global_settings, path, linked_file, &canonical_code_blocks)?;
                 }
                 trace!("Finished generating output for \"{}\"", path.to_string_lossy());
             }
