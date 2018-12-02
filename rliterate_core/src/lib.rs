@@ -41,7 +41,7 @@ pub mod output;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-pub fn run(input_settings: input::InputSettings, mut output_settings: output::OutputSettings) -> Result<()> {
+pub fn run(input_settings: input::InputSettings, mut output_settings: output::Settings) -> Result<()> {
     let parse_state = parser::ParseState::from_input(input_settings)?;
     
     let linked_state = link::LinkState::link(&parse_state.file_map)?;

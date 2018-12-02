@@ -22,7 +22,8 @@
 use parser;
 use parser::{ParseState, get_input_file};
 use parser::grammar::{LitBlock, CodeBlock, Command, BlockModifier};
-use output::css::{CustomCss, CssSettings};
+use output::css;
+use output::css::{CustomCss};
 
 use std::path::{Path, PathBuf};
 
@@ -67,7 +68,7 @@ pub struct LitFile {
 }
 
 impl LitFile {
-    pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> parser::Result<(Self, CssSettings)> {
+    pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> parser::Result<(Self, css::Settings)> {
         let mut title = None;
         let mut code_type_and_file_extension = None;
         let mut comment_type = None;
@@ -191,7 +192,7 @@ impl LitFile {
                 compiler: compiler_settings,
                 book_status: book_status,
             },
-            CssSettings {
+            css::Settings {
                 custom_css: custom_css,
                 custom_colorscheme: custom_colorscheme
             }))

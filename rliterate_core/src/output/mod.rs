@@ -50,15 +50,15 @@ impl From<io::Error> for Error {
     }
 }
 
-pub struct OutputSettings {
+pub struct Settings {
     pub out_dir: PathBuf,
     pub generate_output: bool,
     pub weave: Option<weave::Settings>,
     pub tangle: Option<tangle::Settings>, 
 }
 
-impl OutputSettings {
-    pub fn set_css(&mut self, settings: css::CssSettings) {
+impl Settings {
+    pub fn set_css(&mut self, settings: css::Settings) {
         if let Some(ref mut weave) = self.weave {
             weave.css = settings;
         }

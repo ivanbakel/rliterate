@@ -26,7 +26,7 @@ mod grammar;
 pub use self::grammar::{BlockModifier};
 
 use input;
-use output::css::{CssSettings};
+use output::css;
 
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -63,7 +63,7 @@ impl From<io::Error> for Error {
 pub struct ParseState {    
     in_progress: HashSet<PathBuf>,
     pub file_map: FileMap,
-    pub css_settings: Option<CssSettings>,
+    pub css_settings: Option<css::Settings>,
 }
 
 pub type FileMap = HashMap<PathBuf, LitFile>;

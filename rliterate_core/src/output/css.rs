@@ -20,12 +20,12 @@
  */
 use std::fmt;
 
-pub struct CssSettings {
+pub struct Settings {
     pub custom_css: CustomCss,
     pub custom_colorscheme: Option<String>,
 }
 
-impl fmt::Display for CssSettings {
+impl fmt::Display for Settings {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "css file: {}, colorscheme file: {}", self.custom_css, 
         if let Some(ref cs) = self.custom_colorscheme {
@@ -36,13 +36,13 @@ impl fmt::Display for CssSettings {
     }
 }
 
-impl CssSettings {
+impl Settings {
     pub fn is_default(&self) -> bool {
         !self.custom_css.is_not_none() && self.custom_colorscheme.is_none()
     }
 
     pub fn default() -> Self {
-        CssSettings {
+        Settings {
             custom_css: CustomCss::None,
             custom_colorscheme: None,
         }

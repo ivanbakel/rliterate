@@ -38,7 +38,7 @@ use std::io::{Write};
 
 pub struct Settings {
     pub weave_type: Type,
-    pub css: css::CssSettings,
+    pub css: css::Settings,
 }
 
 pub enum Type {
