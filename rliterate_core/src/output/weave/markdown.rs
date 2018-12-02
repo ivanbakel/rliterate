@@ -38,7 +38,7 @@ impl<'m> MarkDown<'m> {
     pub fn build(settings: &super::Globals, file: &'m LinkedFile<'m>, block_map: &'m BlockMap) -> Self {
         let mut file_contents : Vec<cmark::Event<'m>> = vec![];
     
-        file_contents.append(&mut build_title(file.title));
+        file_contents.append(&mut build_title(&file.title));
         
         for section in file.sections.iter() {
             file_contents.append(&mut build_section_header(settings, section.name, section.depth));

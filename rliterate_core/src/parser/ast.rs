@@ -59,16 +59,29 @@ mod macros {
 
 pub type FormatFn<T> = Box<Fn(T) -> String>;
 
-pub struct LitFile {
+pub struct Metadata {
     pub title: String,
     pub code_type: String,
     pub file_extension: String,
     pub comment_type: Option<FormatFn<String>>,
     pub line_number_format: Option<FormatFn<usize>>,
-    pub sections: Vec<Section>,
     pub compiler: Option<CompilerSettings>,
     pub book_status: BookStatus,
 }
+
+pub struct LitFile {
+    pub metadata: Metadata,
+    pub sections: Vec<Section>,
+}
+
+impl std::ops::Deref for LitFile {
+    type Target = Metadata;
+
+    fn deref(&self) -> &Metadata {
+        &self.metadata
+    }
+}
+
 
 impl LitFile {
     pub fn parse<'a>(parse_state: &mut ParseState, lines: Vec<LitBlock<'a>>) -> parser::Result<(Self, css::Globals)> {
@@ -158,8 +171,7 @@ impl LitFile {
                     
                     parse_state.parse_file(&file_path)?;
 
-                    parse_state.file_map.get_mut(&file_path).unwrap().title 
-                        = chapter_title.to_owned();
+                    parse_state.file_map.get_mut(&file_path).unwrap().set_title(chapter_title.to_owned());
 
                     chapters.push(file_path);
                 },
@@ -191,19 +203,25 @@ impl LitFile {
         let (code_type, file_extension) = code_type_and_file_extension;
 
         Ok((LitFile {
-                title: title,
-                code_type: code_type,
-                file_extension: file_extension,
-                comment_type: comment_type,
-                line_number_format: line_number_format,
+                metadata: Metadata {
+                    title: title,
+                    code_type: code_type,
+                    file_extension: file_extension,
+                    comment_type: comment_type,
+                    line_number_format: line_number_format,
+                    compiler: compiler_settings,
+                    book_status: book_status,
+                },
                 sections: sections,
-                compiler: compiler_settings,
-                book_status: book_status,
             },
             css::Globals {
                 custom_css: custom_css,
                 custom_colorscheme: custom_colorscheme
             }))
+    }
+
+    fn set_title(&mut self, new_title: String) {
+        self.metadata.title = new_title;
     }
 }
 

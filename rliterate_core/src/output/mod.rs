@@ -74,7 +74,7 @@ impl Globals {
                     let file_level_settings = tangle::Settings {
                       global_settings,
                       line_numbers: None,
-                      comment_formatter: linked_file.comment_type,
+                      comment_formatter: linked_file.comment_type.as_ref(),
                       compiler: &linked_file.compiler,
                     };
                     tangle::tangle_blocks(file_level_settings, &canonical_code_blocks)?;
