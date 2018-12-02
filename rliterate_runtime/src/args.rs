@@ -134,7 +134,7 @@ pub fn input_from_args(input_path: &path::Path, args: &ArgMatches<'static>) -> r
 }
     
 pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>) 
-  -> rliterate_core::output::Result<rliterate_core::output::OutputSettings> {
+  -> rliterate_core::output::Result<rliterate_core::output::Globals> {
     trace!("Started parsing command-line arguments...");
 
     let weave = if args.is_present(constants::tangle) {
@@ -155,10 +155,10 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
             rliterate_core::output::weave::Type::HtmlViaMarkdown(md_compiler)
         };
 
-        Some(rliterate_core::output::weave::Settings {
+        Some(rliterate_core::output::weave::Globals {
             weave_type: weave_type,
             out_dir: output_dir.to_path_buf(),
-            css: rliterate_core::output::css::CssSettings::default(),
+            css: rliterate_core::output::css::Globals::default(),
         })
     };
 
@@ -166,18 +166,14 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
         info!("Setting the weave-only flag");
         None
     } else {
-        let line_numbers = args.value_of(constants::line_numbers)
-            .map(|format_string| generate_line_numbers(format_string));
-
-        Some(rliterate_core::output::tangle::Settings {
+        Some(rliterate_core::output::tangle::Globals {
             compile: args.is_present(constants::compiler),
             out_dir: output_dir.to_path_buf(),
-            line_numbers: line_numbers,
         })
     };
 
     trace!("Finished parsing command-line arguments");
-    Ok(rliterate_core::output::OutputSettings {
+    Ok(rliterate_core::output::Globals {
         generate_output: !args.is_present(constants::no_output),
         weave: weave,
         tangle: tangle,
