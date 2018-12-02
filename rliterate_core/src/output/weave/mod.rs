@@ -26,7 +26,7 @@ mod html;
 use output;
 use output::css;
 use output::canon::{BlockMap};
-use link::{LinkedFile, LinkedBlock, LinkedLine};
+use link::{LinkedFile};
 
 use pulldown_cmark as cmark;
 use prettify_cmark;

@@ -20,7 +20,6 @@
  */
 
 #![feature(proc_macro_hygiene)]
-#![feature(use_extern_macros)]
 
 #[macro_use]
 extern crate bitflags;
@@ -31,8 +30,6 @@ extern crate subprocess;
 extern crate pulldown_cmark;
 extern crate prettify_cmark;
 extern crate maud;
-
-use std::path;
 
 mod parser;
 pub mod link;

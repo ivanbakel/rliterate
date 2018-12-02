@@ -33,7 +33,7 @@ static katex_html : &'static str = include_str!("katex.html");
 
 pub fn print(mut file: fs::File, html: String, title: &str, css: &css::Settings) -> output::Result<()> {
     let markup = html! {
-        DOCTYPE;
+        (DOCTYPE);
         head {
             title { (title) };
             (PreEscaped(katex_html))
