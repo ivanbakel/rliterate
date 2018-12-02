@@ -64,6 +64,7 @@ pub struct LitFile {
     pub code_type: String,
     pub file_extension: String,
     pub comment_type: Option<FormatFn<String>>,
+    pub line_number_format: Option<FormatFn<usize>>,
     pub sections: Vec<Section>,
     pub compiler: Option<CompilerSettings>,
     pub book_status: BookStatus,
@@ -76,6 +77,7 @@ impl LitFile {
         let mut comment_type = None;
         let mut compiler_command = None;
         let mut error_format = None;
+        let mut line_number_format = None;
         let mut is_book = false;
         let mut custom_css = CustomCss::None;
         let mut custom_colorscheme = None;
@@ -107,6 +109,9 @@ impl LitFile {
                     },
                     Command::ErrorFormat(formatter) => {
                         once!(error_format, generate_error_format(formatter))
+                    },
+                    Command::LineNumbers(formatter) => {
+                        once!(line_number_format, generate_line_number_format(formatter))
                     },
                     Command::Section { name, depth } => {
                         let last_id = current_section.id;
@@ -190,6 +195,7 @@ impl LitFile {
                 code_type: code_type,
                 file_extension: file_extension,
                 comment_type: comment_type,
+                line_number_format: line_number_format,
                 sections: sections,
                 compiler: compiler_settings,
                 book_status: book_status,
@@ -273,5 +279,12 @@ fn generate_comment_type(format_string: &str) -> FormatFn<String> {
   let owned_format = format_string.to_owned();
   Box::new(move |comment| { 
     owned_format.replace("%s", &comment)
+  })
+}
+
+fn generate_line_number_format(format_string: &str) -> FormatFn<usize> {
+  let owned_format = format_string.to_owned();
+  Box::new(move |line_number| { 
+    owned_format.replace("%l", &line_number.to_string())
   })
 }

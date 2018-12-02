@@ -29,6 +29,7 @@ pub enum Command<'a> {
     CommentType(&'a str),
     Compiler(&'a str),
     ErrorFormat(&'a str),
+    LineNumbers(&'a str),
     Book,
     AddCss(&'a str),
     OverwriteCss(&'a str),

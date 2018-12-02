@@ -55,7 +55,7 @@ pub fn tangle_blocks<'a>(settings: Settings<'a>,
 
 pub struct Settings<'borrow> {
     pub global_settings: &'borrow Globals,
-    pub line_numbers: Option<&'static Fn(usize) -> String>,
+    pub line_numbers: Option<&'borrow FormatFn<usize>>,
     pub comment_formatter: Option<&'borrow FormatFn<String>>,
     pub compiler: &'borrow Option<CompilerSettings>,
 }

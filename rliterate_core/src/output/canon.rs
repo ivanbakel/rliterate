@@ -71,10 +71,10 @@ impl<'a> CanonicalCodeBlock<'a> {
         self.print_header
     }
 
-    pub fn contents(&self) -> Iter<LinkedLine<'a>> {
-        self.contents.iter()
+    pub fn contents(&self) -> &[LinkedLine<'a>] {
+        &self.contents[..]
     }
-
+    
     fn append_lines(&mut self, lines: &[LinkedLine<'a>]) {
         self.contents.extend_from_slice(lines);
     }

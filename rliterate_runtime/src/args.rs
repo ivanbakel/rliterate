@@ -74,13 +74,6 @@ fn add_common_cli_options(app: App<'static, 'static>) -> App<'static, 'static> {
             .required(false)
             .conflicts_with(constants::weave))
         .arg(
-            Arg::with_name(constants::line_numbers)
-            .help("Set the format string for line numbers in the code output")
-            .short("l")
-            .long("linenums")
-            .required(false)
-            .takes_value(true))
-        .arg(
             Arg::with_name(constants::tangle)
             .help("Only produce the code output.")
             .short("t")

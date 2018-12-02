@@ -26,3 +26,4 @@ For a workspace, the command acts recursively.
 
  - File-level commands can only be defined once. In practise, this should affect nobody.
  - CSS commands are deprecated, and their behaviour is somewhat different. If you want to add custom CSS stylings to your output, it's recommended you use a specialised tool for making webpages out of the raw markdown or HTML files.
+ - The line number CLI argument has been replacement with a `@line_numbers` command. This functions similarly to the `@comment_type` command, but with `%l` in place of `%s`.

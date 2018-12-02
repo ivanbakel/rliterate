@@ -60,6 +60,7 @@ pub struct LinkedFile<'a> {
     pub title: &'a str,
     pub code_type: &'a str,
     pub comment_type: Option<&'a FormatFn<String>>,
+    pub line_number_format: Option<&'a FormatFn<usize>>,
     pub sections: Vec<LinkedSection<'a>>,
     pub compiler: &'a Option<CompilerSettings>,
     pub link_map: LinkMap<'a>,
@@ -73,8 +74,8 @@ pub struct LinkedSection<'a> {
 }
 
 pub enum LinkedBlock<'a> {
-    Code { name: &'a String, modifiers: BlockModifier, lines: Vec<LinkedLine<'a>> },
-    Prose { lines: Vec<LinkedLine<'a>> },
+    Code { name: &'a String, modifiers: BlockModifier, lines: Vec<LinkedLine<'a>>, },
+    Prose { lines: Vec<LinkedLine<'a>>, },
 }
 
 impl<'a> LinkedBlock<'a> {
@@ -252,6 +253,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
         title: &lit_file.title,
         code_type: &lit_file.code_type,
         comment_type: lit_file.comment_type.as_ref(),
+        line_number_format: lit_file.line_number_format.as_ref(),
         sections: linked_sections,
         compiler: &lit_file.compiler,
         link_map: link_map,

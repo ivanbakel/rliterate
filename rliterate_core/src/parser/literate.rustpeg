@@ -58,6 +58,9 @@ file_extension -> &'input str
 comment_pattern -> &'input str
   = line_slice
 
+line_num_pattern -> &'input str
+  = line_slice
+
 error_pattern -> &'input str
   = line_slice
 
@@ -73,6 +76,7 @@ a_command -> Command<'input>
   / "code_type" __ ctype:$([A-Za-z_-]+) _ extension:file_extension 
     { Command::CodeType { code_type: ctype, file_extension: extension } }
   / "comment_type" __ pattern:comment_pattern { Command::CommentType(pattern) }
+  / "line_numbers" __ pattern:line_num_pattern { Command::LineNumbers(pattern) }
   / "compiler" __ sh_command:shell_command { Command::Compiler(sh_command) }
   / "error_format" __ err_format:error_pattern { Command::ErrorFormat(err_format) }
   / "book" __ { Command::Book }
