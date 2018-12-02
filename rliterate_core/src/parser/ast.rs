@@ -57,11 +57,13 @@ mod macros {
     }
 }
 
+pub type FormatFn<T> = Box<Fn(T) -> String>;
+
 pub struct LitFile {
     pub title: String,
     pub code_type: String,
     pub file_extension: String,
-    pub comment_type: Option<&'static Fn(String) -> String>,
+    pub comment_type: Option<FormatFn<String>>,
     pub sections: Vec<Section>,
     pub compiler: Option<CompilerSettings>,
     pub book_status: BookStatus,
@@ -267,6 +269,9 @@ fn generate_error_format(format_string: &str) -> &'static (Fn(String, String, St
     panic!()
 }
 
-fn generate_comment_type(format_string: &str) -> &'static (Fn(String) -> String) {
-    panic!()
+fn generate_comment_type(format_string: &str) -> FormatFn<String> {
+  let owned_format = format_string.to_owned();
+  Box::new(move |comment| { 
+    owned_format.replace("%s", &comment)
+  })
 }

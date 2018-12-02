@@ -19,7 +19,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-use parser::{CompilerSettings};
+use parser::{FormatFn, CompilerSettings};
 use output;
 use output::canon::{CanonicalCodeBlock, BlockMap};
 
@@ -56,6 +56,7 @@ pub fn tangle_blocks<'a>(settings: Settings<'a>,
 pub struct Settings<'borrow> {
     pub global_settings: &'borrow Globals,
     pub line_numbers: Option<&'static Fn(usize) -> String>,
+    pub comment_formatter: Option<&'borrow FormatFn<String>>,
     pub compiler: &'borrow Option<CompilerSettings>,
 }
 
@@ -84,7 +85,9 @@ impl<'borrow> Settings<'borrow> {
                        prependix: Vec<&'a str>,
                        appendix: Vec<&'a str>) -> output::Result<()> {
         if block.print_header() {
-            Self::print_line(file, &prependix[..], &format!("// {}", name), &appendix[..])?;
+            if let Some(comment_formatter) = self.comment_formatter {
+                Self::print_line(file, &prependix[..], &comment_formatter(name.to_string()), &appendix[..])?;
+            }
         }
 
         for line in block.contents() {

@@ -20,7 +20,7 @@
  */
 
 use parser;
-use parser::{LitFile, Block, BlockModifier, CompilerSettings};
+use parser::{LitFile, FormatFn, Block, BlockModifier, CompilerSettings};
 
 use std::collections::{HashMap, VecDeque};
 use std::path::{PathBuf};
@@ -59,7 +59,7 @@ type LinkMap<'a> = HashMap<&'a str, Vec<&'a str>>;
 pub struct LinkedFile<'a> {
     pub title: &'a str,
     pub code_type: &'a str,
-    pub comment_type: Option<&'static Fn(String) -> String>,
+    pub comment_type: Option<&'a FormatFn<String>>,
     pub sections: Vec<LinkedSection<'a>>,
     pub compiler: &'a Option<CompilerSettings>,
     pub link_map: LinkMap<'a>,
@@ -251,7 +251,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
     Ok(LinkedFile {
         title: &lit_file.title,
         code_type: &lit_file.code_type,
-        comment_type: lit_file.comment_type,
+        comment_type: lit_file.comment_type.as_ref(),
         sections: linked_sections,
         compiler: &lit_file.compiler,
         link_map: link_map,
