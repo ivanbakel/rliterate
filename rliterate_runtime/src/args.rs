@@ -29,19 +29,19 @@ pub fn get_main_arg_parser() -> App<'static, 'static> {
         .before_help("Consult the `literate` docs for information about the .lit format.")
         .version(crate_version!())
         .arg(
-            Arg::with_name(constants::input)
+            Arg::with_name(constants::INPUT)
             .help("The input file or directory. If a directory is given, all the .lit files in it will be processed")
             .index(1)
             .required(true))
         .arg(
-            Arg::with_name(constants::output_directory)
+            Arg::with_name(constants::OUTPUT_DIRECTORY)
             .help("The directory to write generated files to.")
             .short("odir")
             .long("out-dir")
             .required(false)
             .takes_value(true))
         .arg(
-            Arg::with_name(constants::recurse)
+            Arg::with_name(constants::RECURSE)
             .help("Recurse into subdirectories.")
             .short("r")
             .long("recurse")
@@ -61,68 +61,68 @@ pub fn get_cargo_arg_parser() -> App<'static, 'static> {
 
 fn add_common_cli_options(app: App<'static, 'static>) -> App<'static, 'static> {
     app.arg(
-            Arg::with_name(constants::no_output)
+            Arg::with_name(constants::NO_OUTPUT)
             .help("Don't produce any output files.")
             .short("no")
             .long("no-output")
             .required(false))
         .arg(
-            Arg::with_name(constants::compiler)
+            Arg::with_name(constants::COMPILER)
             .help("Run any compiler commands for linting the code output.")
             .short("c")
             .long("compiler")
             .required(false)
-            .conflicts_with(constants::weave))
+            .conflicts_with(constants::WEAVE))
         .arg(
-            Arg::with_name(constants::tangle)
+            Arg::with_name(constants::TANGLE)
             .help("Only produce the code output.")
             .short("t")
             .long("tangle"))
         .arg(
-            Arg::with_name(constants::weave)
+            Arg::with_name(constants::WEAVE)
             .help("Only produce the documentation output.")
             .short("w")
             .long("weave"))
-        .arg(Arg::with_name(constants::weave_output)
+        .arg(Arg::with_name(constants::WEAVE_OUTPUT)
              .help("Set the type of documentation output - valid options are markdown and html.")
              .long("weave-output")
              .required(false)
              .takes_value(true)
-             .conflicts_with(constants::tangle))
-        .arg(Arg::with_name(constants::md_compiler)
+             .conflicts_with(constants::TANGLE))
+        .arg(Arg::with_name(constants::MD_COMPILER)
              .help("Set the markdown compiler used to generate html output.")
              .long("markdown-compiler")
              .required(false)
              .takes_value(true)
-             .conflicts_with(constants::tangle))
+             .conflicts_with(constants::TANGLE))
         .group(
-            ArgGroup::with_name(constants::output_type)
-            .args(&[constants::tangle, constants::weave])
+            ArgGroup::with_name(constants::OUTPUT_TYPE)
+            .args(&[constants::TANGLE, constants::WEAVE])
             .required(false)
             .multiple(false))
 }
 
 pub mod constants {
-    pub const input : &'static str = "input";
-    pub const no_output : &'static str = "no_output";
-    pub const recurse : &'static str = "recurse";
-    pub const compiler : &'static str = "compiler";
-    pub const output_directory : &'static str = "output_directory";
-    pub const line_numbers : &'static str = "line_numbers";
-    pub const tangle : &'static str = "tangle";
-    pub const weave : &'static str = "weave";
-    pub const weave_output : &'static str = "weave_output";
-    pub const html : &'static str = "html";
-    pub const md : &'static str = "md";
-    pub const markdown : &'static str = "markdown";
-    pub const md_compiler : &'static str = "md_compiler";
-    pub const output_type : &'static str = "output_type";
+    pub const INPUT : &'static str = "input";
+    pub const NO_OUTPUT : &'static str = "no_output";
+    pub const RECURSE : &'static str = "recurse";
+    pub const COMPILER : &'static str = "compiler";
+    pub const OUTPUT_DIRECTORY : &'static str = "output_directory";
+    pub const LINE_NUMBERS : &'static str = "line_numbers";
+    pub const TANGLE : &'static str = "tangle";
+    pub const WEAVE : &'static str = "weave";
+    pub const WEAVE_OUTPUT : &'static str = "weave_output";
+    pub const HTML : &'static str = "html";
+    pub const MD : &'static str = "md";
+    pub const MARKDOWN : &'static str = "markdown";
+    pub const MD_COMPILER : &'static str = "md_compiler";
+    pub const OUTPUT_TYPE : &'static str = "output_type";
 }    
 
 pub fn input_from_args(input_path: &path::Path, args: &ArgMatches<'static>) -> rliterate_core::input::InputSettings {
     rliterate_core::input::InputSettings {
         input_path: input_path.to_owned(),
-        recurse: args.is_present(constants::recurse),
+        recurse: args.is_present(constants::RECURSE),
     }
 }
     
@@ -130,17 +130,17 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
   -> rliterate_core::output::Result<rliterate_core::output::Globals> {
     trace!("Started parsing command-line arguments...");
 
-    let weave = if args.is_present(constants::tangle) {
+    let weave = if args.is_present(constants::TANGLE) {
         info!("Setting the tangle-only flag");
         None
     } else {
-        let md_compiler = args.value_of(constants::md_compiler)
+        let md_compiler = args.value_of(constants::MD_COMPILER)
             .map(|contents| contents.to_owned());
 
-        let weave_type = if let Some(weave_output_type) = args.value_of(constants::weave_output) {
+        let weave_type = if let Some(weave_output_type) = args.value_of(constants::WEAVE_OUTPUT) {
             match weave_output_type {
-                constants::markdown | constants::md => rliterate_core::output::weave::Type::Markdown,
-                constants::html => rliterate_core::output::weave::Type::HtmlViaMarkdown(md_compiler),
+                constants::MARKDOWN | constants::MD => rliterate_core::output::weave::Type::Markdown,
+                constants::HTML => rliterate_core::output::weave::Type::HtmlViaMarkdown(md_compiler),
                 _ => return Err(rliterate_core::output::Error::BadCLIArgument(format!("Unknown documentation output type: {}", weave_output_type))),
             }
         } else {
@@ -155,19 +155,19 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
         })
     };
 
-    let tangle = if args.is_present(constants::weave) {
+    let tangle = if args.is_present(constants::WEAVE) {
         info!("Setting the weave-only flag");
         None
     } else {
         Some(rliterate_core::output::tangle::Globals {
-            compile: args.is_present(constants::compiler),
+            compile: args.is_present(constants::COMPILER),
             out_dir: output_dir.to_path_buf(),
         })
     };
 
     trace!("Finished parsing command-line arguments");
     Ok(rliterate_core::output::Globals {
-        generate_output: !args.is_present(constants::no_output),
+        generate_output: !args.is_present(constants::NO_OUTPUT),
         weave: weave,
         tangle: tangle,
     })

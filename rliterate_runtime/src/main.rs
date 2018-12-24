@@ -32,8 +32,8 @@ fn main() -> rliterate_core::Result<()> {
 
     let args : clap::ArgMatches<'static> = args::get_main_arg_parser().get_matches();
 
-    let input_path = path::Path::new(args.value_of(args::constants::input).unwrap());
-    let output_path = args.value_of(args::constants::output_directory)
+    let input_path = path::Path::new(args.value_of(args::constants::INPUT).unwrap());
+    let output_path = args.value_of(args::constants::OUTPUT_DIRECTORY)
             .map_or(
                 env::current_dir().unwrap(),
                 |out_dir| path::Path::new(out_dir).to_path_buf()
