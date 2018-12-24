@@ -20,7 +20,7 @@
  */
 
 use parser;
-use parser::{LitFile, FormatFn, Block, BlockModifier, CompilerSettings};
+use parser::{LitFile, Block, BlockModifier};
 
 use std::collections::{HashMap, VecDeque};
 use std::path::{PathBuf};

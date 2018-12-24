@@ -23,7 +23,6 @@ use parser::{BlockModifier};
 use link::{LinkedSection, LinkedBlock, LinkedLine};
 
 use std::collections::{HashMap};
-use std::slice::{Iter};
 use std::path::{Path};
 
 pub struct CanonicalCodeBlock<'a> {

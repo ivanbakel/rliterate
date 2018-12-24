@@ -28,21 +28,21 @@ use maud::{DOCTYPE, PreEscaped};
 use std::fs;
 use std::io::{Write};
 
-static default_css_style : &'static str = include_str!("default.css");
-static katex_html : &'static str = include_str!("katex.html");
+static DEFAULT_CSS_STYLE : &'static str = include_str!("default.css");
+static KATEX_HTML : &'static str = include_str!("katex.html");
 
 pub fn print(mut file: fs::File, html: String, title: &str, css: &css::Globals) -> output::Result<()> {
     let markup = html! {
         (DOCTYPE);
         head {
             title { (title) };
-            (PreEscaped(katex_html))
+            (PreEscaped(KATEX_HTML))
             (match css.custom_css {
                 css::CustomCss::None => html! {},
                 css::CustomCss::Add(ref file_path) => {
                     html! {
                         style {
-                            (default_css_style)
+                            (DEFAULT_CSS_STYLE)
                             (fs::read_to_string(file_path)?)
                         }
                     }

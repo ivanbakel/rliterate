@@ -33,7 +33,7 @@ pub fn tangle_blocks<'a>(settings: Settings<'a>,
                          canonical_code_blocks: &BlockMap) -> output::Result<()> {
     trace!("Starting the tangle...");
     for (name, block) in canonical_code_blocks.iter()
-        .filter(|(key, block)| block.is_file() && block.print_to_tangle()) {
+        .filter(|(_, block)| block.is_file() && block.print_to_tangle()) {
         let output_file_path = settings.global_settings.out_dir.join(name);
         
         info!("Found a file block \"{}\", writing to \"{}\"", name, output_file_path.to_string_lossy());
