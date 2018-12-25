@@ -70,9 +70,10 @@ impl Globals {
             if self.generate_output {
                 trace!("Generating output for \"{}\"...", path.to_string_lossy());
                 if let Some(ref global_settings) = self.tangle {
+                    let line_numbers =  linked_file.line_number_format.as_ref().or(global_settings.line_numbers.as_ref());
                     let file_level_settings = tangle::Settings {
                       global_settings,
-                      line_numbers: None,
+                      line_numbers,
                       comment_formatter: linked_file.comment_type.as_ref(),
                       compiler: &linked_file.compiler,
                     };

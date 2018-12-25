@@ -62,6 +62,7 @@ pub struct Settings<'borrow> {
 
 pub struct Globals {
     pub compile: bool,
+    pub line_numbers: Option<FormatFn<usize>>,
     pub out_dir: PathBuf,
 }
 

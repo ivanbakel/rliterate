@@ -21,7 +21,7 @@
 
 #[macro_use]
 mod ast;
-pub use self::ast::{FormatFn, LitFile, Metadata, Section, Block, CompilerSettings};
+pub use self::ast::{FormatFn, LitFile, Metadata, Section, Block, CompilerSettings, generate_line_number_format};
 mod grammar;
 pub use self::grammar::{BlockModifier};
 

@@ -79,6 +79,14 @@ fn add_common_cli_options(app: App<'static, 'static>) -> App<'static, 'static> {
             .short("t")
             .long("tangle"))
         .arg(
+            Arg::with_name(constants::LINE_NUMBERS)
+            .help("Set the format string for line numbers in the code output")
+            .short("l")
+            .long("linenums")
+            .required(false)
+            .takes_value(true)
+            .conflicts_with(constants::WEAVE))
+        .arg(
             Arg::with_name(constants::WEAVE)
             .help("Only produce the documentation output.")
             .short("w")
@@ -159,8 +167,12 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
         info!("Setting the weave-only flag");
         None
     } else {
+        let line_number_format = args.value_of(constants::LINE_NUMBERS).map(|line_number_format_string| {
+            rliterate_core::parser::generate_line_number_format(line_number_format_string)
+        });
         Some(rliterate_core::output::tangle::Globals {
             compile: args.is_present(constants::COMPILER),
+            line_number_format,
             out_dir: output_dir.to_path_buf(),
         })
     };
@@ -171,9 +183,5 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
         weave: weave,
         tangle: tangle,
     })
-}
-
-fn generate_line_numbers(format_string: &str) -> (&'static Fn(usize) -> String) {
-    panic!()
 }
 

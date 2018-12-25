@@ -300,7 +300,7 @@ fn generate_comment_type(format_string: &str) -> FormatFn<String> {
   })
 }
 
-fn generate_line_number_format(format_string: &str) -> FormatFn<usize> {
+pub fn generate_line_number_format(format_string: &str) -> FormatFn<usize> {
   let owned_format = format_string.to_owned();
   Box::new(move |line_number| { 
     owned_format.replace("%l", &line_number.to_string())
