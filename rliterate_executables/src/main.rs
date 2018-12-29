@@ -25,7 +25,7 @@ use std::env;
 use std::path;
 
 use rliterate_core::{run};
-use rliterate_runtime::args;
+use rliterate_executables::args;
 
 fn main() -> rliterate_core::Result<()> {
     env_logger::init();

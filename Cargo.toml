@@ -2,5 +2,5 @@
 
 members = [
     "rliterate_core",
-    "rliterate_runtime",
+    "rliterate_executables",
 ]

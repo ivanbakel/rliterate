@@ -27,7 +27,7 @@ use url::{Url};
 use std::env;
 use std::path::{Path};
 
-use rliterate_runtime::args;
+use rliterate_executables::args;
 use rliterate_core::input;
 use rliterate_core::{run};
 
