@@ -46,6 +46,7 @@ pub enum Error {
     FileRepeat,
     GrammarError(grammar::ParseError),
     FormatError,
+    BadChapterPath,
 }
 
 impl From<grammar::ParseError> for Error {
@@ -82,13 +83,17 @@ impl ParseState {
         let mut parse_state = ParseState::new();  
 
         for file in get_input_files(&input_settings.input_path, input_settings.recurse)?.into_iter() {
-            parse_state.parse_file(&file)?;
+            // We expect both of these things because
+            //  * the input files are all under the input directory
+            //  * the input files all have some parent
+            let relative_directory = file.strip_prefix(&input_settings.input_path).unwrap().parent().unwrap();
+            parse_state.parse_file(&file, relative_directory)?;
         }
 
         Ok(parse_state)
     }
 
-    pub fn parse_file(&mut self, file_path: &PathBuf) -> Result<()> {
+    pub fn parse_file(&mut self, file_path: &PathBuf, relative_directory: &Path) -> Result<()> {
         if self.in_progress.contains(file_path) {
             error!("Found an include loop when trying to load file \"{}\"", file_path.to_string_lossy());
             Err(Error::FileLoop)
@@ -102,7 +107,8 @@ impl ParseState {
             
             self.in_progress.insert(file_path.clone());
 
-            let (lit_file, settings) = LitFile::parse(self, lit_blocks)?;
+            let (mut lit_file, settings) = LitFile::parse(self, lit_blocks)?;
+            lit_file.metadata.relative_directory.push(relative_directory);
 
             if !settings.is_default() {
                 once!(self.css_settings, is_some, Some(settings), Error::ConflictingCss);

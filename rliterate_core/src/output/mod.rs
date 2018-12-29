@@ -73,6 +73,7 @@ impl Globals {
                     let line_numbers =  linked_file.line_number_format.as_ref().or(global_settings.line_numbers.as_ref());
                     let file_level_settings = tangle::Settings {
                       global_settings,
+                      relative_directory: &linked_file.relative_directory,
                       line_numbers,
                       comment_formatter: linked_file.comment_type.as_ref(),
                       compiler: &linked_file.compiler,

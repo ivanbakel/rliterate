@@ -52,8 +52,11 @@ pub fn weave_file_with_blocks<'a>(settings: &Globals, file_name: &PathBuf, file:
     match settings.weave_type {
         Type::HtmlViaMarkdown(ref maybe_command) => {
             let markdown = MarkDown::build(settings, file, block_map);
+        
+            let html_dir = settings.out_dir.join(&file.relative_directory); 
+            std::fs::DirBuilder::new().recursive(true).create(&html_dir)?;
 
-            let mut html_filename = settings.out_dir.join(file_name.file_stem().unwrap());
+            let mut html_filename = html_dir.join(file_name.file_stem().unwrap());
             html_filename.set_extension("html");
             info!("Writing HTML documentation to \"{}\"", html_filename.to_string_lossy());
 
@@ -69,8 +72,11 @@ pub fn weave_file_with_blocks<'a>(settings: &Globals, file_name: &PathBuf, file:
         },
         Type::Markdown => {
             let markdown = MarkDown::build(settings, file, block_map);
+            
+            let md_dir = settings.out_dir.join(&file.relative_directory); 
+            std::fs::DirBuilder::new().recursive(true).create(&md_dir)?;
 
-            let mut md_filename = settings.out_dir.join(file_name.file_stem().unwrap());
+            let mut md_filename = md_dir.join(file_name.file_stem().unwrap());
             md_filename.set_extension("md");
             info!("Writing Markdown documentation to \"{}\"", md_filename.to_string_lossy());
 

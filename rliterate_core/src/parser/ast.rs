@@ -60,6 +60,7 @@ mod macros {
 pub type FormatFn<T> = Box<Fn(T) -> String>;
 
 pub struct Metadata {
+    pub relative_directory: PathBuf,
     pub title: String,
     pub code_type: String,
     pub file_extension: String,
@@ -168,8 +169,15 @@ impl LitFile {
                 },
                 LitBlock::Chapter { title: chapter_title, file_name: chapter_file } => {
                     let file_path = get_input_file(Path::new(chapter_file))?;
-                    
-                    parse_state.parse_file(&file_path)?;
+                   
+                    if file_path.is_absolute() {
+                      return Err(parser::Error::BadChapterPath);
+                    }
+                    //Constrain the borrow region
+                    {
+                        let relative_directory = file_path.parent().unwrap();
+                        parse_state.parse_file(&file_path, &relative_directory)?;
+                    }
 
                     parse_state.file_map.get_mut(&file_path).unwrap().set_title(chapter_title.to_owned());
 
@@ -204,6 +212,7 @@ impl LitFile {
 
         Ok((LitFile {
                 metadata: Metadata {
+                    relative_directory: PathBuf::new(),
                     title: title,
                     code_type: code_type,
                     file_extension: file_extension,

@@ -34,7 +34,10 @@ pub fn tangle_blocks<'a>(settings: Settings<'a>,
     trace!("Starting the tangle...");
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(_, block)| block.is_file() && block.print_to_tangle()) {
-        let output_file_path = settings.global_settings.out_dir.join(name);
+        let output_relative_dir = settings.global_settings.out_dir.join(settings.relative_directory); 
+        std::fs::DirBuilder::new().recursive(true).create(&output_relative_dir)?;
+        
+        let output_file_path = output_relative_dir.join(name);
         
         info!("Found a file block \"{}\", writing to \"{}\"", name, output_file_path.to_string_lossy());
         // To avoid cluttering a workspace during linting, we do not produce the tangle output when
@@ -55,6 +58,7 @@ pub fn tangle_blocks<'a>(settings: Settings<'a>,
 
 pub struct Settings<'borrow> {
     pub global_settings: &'borrow Globals,
+    pub relative_directory: &'borrow Path,
     pub line_numbers: Option<&'borrow FormatFn<usize>>,
     pub comment_formatter: Option<&'borrow FormatFn<String>>,
     pub compiler: &'borrow Option<CompilerSettings>,
