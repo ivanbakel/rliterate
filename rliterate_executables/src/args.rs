@@ -24,7 +24,7 @@ use clap::{App, Arg, ArgGroup, ArgMatches};
 use std::path;
 
 pub fn get_main_arg_parser() -> App<'static, 'static> {
-    let mut app = App::new("Literate")
+    let app = App::new("Literate")
         .about("Literate programming tool, based on the original Dlang `literate`.")
         .before_help("Consult the `literate` docs for information about the .lit format.")
         .version(crate_version!())
@@ -51,7 +51,7 @@ pub fn get_main_arg_parser() -> App<'static, 'static> {
 }
 
 pub fn get_cargo_arg_parser() -> App<'static, 'static> {
-    let mut app = App::new("cargo lit")
+    let app = App::new("cargo lit")
         .about("A cargo subcommand for processing a literate project's `.lit` files and generating source code.")
         .before_help("Consult the help for `literate` for help with using this subcommand.")
         .version(crate_version!());
@@ -172,7 +172,7 @@ pub fn output_from_args(output_dir : &path::Path, args: &ArgMatches<'static>)
         });
         Some(rliterate_core::output::tangle::Globals {
             compile: args.is_present(constants::COMPILER),
-            line_number_format,
+            line_numbers: line_number_format,
             out_dir: output_dir.to_path_buf(),
         })
     };

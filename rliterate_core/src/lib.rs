@@ -31,7 +31,7 @@ extern crate pulldown_cmark;
 extern crate prettify_cmark;
 extern crate maud;
 
-mod parser;
+pub mod parser;
 pub mod link;
 pub mod input;
 pub mod output;
