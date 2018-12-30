@@ -57,13 +57,31 @@ fn main() -> rliterate_core::Result<()> {
 }
 
 fn run_on_workspace(path: &str, args: &clap::ArgMatches<'static>) -> rliterate_core::Result<()> {
-    let lit_folder = Path::new(path).join("lit");
-    let src_folder = Path::new(path).join("src");
+    for entry in std::fs::read_dir(path).map_err(|_| {
+        rliterate_core::Error::Other(format!("Failed to read entries in `{}`", path))
+    })? {
+      let entry = entry.map_err(|_| rliterate_core::Error::Other(format!("Failed trying to read entry in `{}`", path)))?;
+      let entry_name = entry.file_name();
+
+      let output_folder = match entry_name.to_str() {
+        Some("lit") => Path::new(path).join("src"),
+        Some(name) if name.starts_with("lit.") => {
+          let target = &name[4..];
+          if target.len() == 0 {
+            return Err(rliterate_core::Error::Other(format!("No target folder for the literate folder `{}`", name)));
+          }
+          Path::new(path).join(target)
+        },
+        _ => continue,
+      };
     
-    
-    let input_settings = input::InputSettings::recurse(&lit_folder);
-    let output_settings = args::output_from_args(&src_folder, &args)?;
-    
-    run(input_settings, output_settings)
+      let lit_folder = entry.path();
+      let input_settings = input::InputSettings::recurse(&lit_folder);
+      let output_settings = args::output_from_args(&output_folder, &args)?;
+      
+      run(input_settings, output_settings)?;
+    }
+
+    Ok(())
 }
 
