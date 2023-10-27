@@ -44,11 +44,11 @@ pub fn tangle_blocks<'a>(settings: Settings<'a>,
         // compiling
         if settings.global_settings.compile {
             //Compile the file
-            settings.compile_file(settings.compiler, &output_file_path)?;
+            compile_file(settings.compiler, &output_file_path)?;
         } else {
             // Print the file out
             let to_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(&output_file_path)?;
-            settings.print_file(to_file, name, block, &canonical_code_blocks)?;
+            print_file(to_file, settings.comment_formatter, name, block, &canonical_code_blocks)?;
         }
     }
 
@@ -70,86 +70,83 @@ pub struct Globals {
     pub out_dir: PathBuf,
 }
 
-impl<'borrow> Settings<'borrow> {
-    fn print_file<'a>(&self,
-                      mut file: fs::File,
-                      name: &'a str, 
-                      file_block: &CanonicalCodeBlock<'a>, 
-                      blocks: &BlockMap<'a>) -> output::Result<()> {
-        trace!("Printing out \"{}\"...", name);
-        self.print_block(&mut file, name, file_block, blocks, vec![], vec![])?;
-        trace!("Finished printing out \"{}\"", name);
-        Ok(())
-    }
-    
-    fn print_block<'a>(&self, 
-                       file: &mut fs::File,
-                       name: &'a str, 
-                       block: &CanonicalCodeBlock<'a>, 
-                       blocks: &BlockMap<'a>,
-                       prependix: Vec<&'a str>,
-                       appendix: Vec<&'a str>) -> output::Result<()> {
-        if block.print_header() {
-            if let Some(comment_formatter) = self.comment_formatter {
-                Self::print_line(file, &prependix[..], &comment_formatter(name.to_string()), &appendix[..])?;
-            }
+fn print_file<'a>(mut file: fs::File,
+                  comment_formatter: Option<&'a FormatFn<String>>,
+                  name: &'a str, 
+                  file_block: &CanonicalCodeBlock<'a>, 
+                  blocks: &BlockMap<'a>) -> output::Result<()> {
+    trace!("Printing out \"{}\"...", name);
+    print_block(&mut file, comment_formatter, name, file_block, blocks, vec![], vec![])?;
+    trace!("Finished printing out \"{}\"", name);
+    Ok(())
+}
+
+fn print_block<'a>(file: &mut fs::File,
+                   comment_formatter: Option<&'a FormatFn<String>>,
+                   name: &'a str,
+                   block: &CanonicalCodeBlock<'a>, 
+                   blocks: &BlockMap<'a>,
+                   prependix: Vec<&'a str>,
+                   appendix: Vec<&'a str>) -> output::Result<()> {
+    if block.print_header() {
+        if let Some(comment_formatter) = comment_formatter {
+            print_line(file, &prependix[..], &comment_formatter(name.to_string()), &appendix[..])?;
         }
-
-        for line in block.contents() {
-            let mut printed_link = false;
-
-            for (pre_link, link, post_link) in line.split_links() {
-                printed_link = true;
-
-                let mut sub_pre = prependix.clone();
-                sub_pre.extend_from_slice(pre_link);
-
-                let mut sub_app = appendix.clone();
-                sub_app.extend_from_slice(post_link);
-
-                self.print_block(file, link, blocks.get(link).unwrap(), blocks, sub_pre, sub_app)?;
-            }
-
-            if !printed_link {
-                Self::print_line(file, &prependix[..], line.get_text(), &appendix[..])?;
-            }
-        }
-
-        Ok(())
     }
 
-    fn print_line(file: &mut fs::File, prependix: &[&str], line: &str, appendix: &[&str]) -> output::Result<()> {
-        for pre in prependix {
-            write!(file, "{}", pre)?;
+    for line in block.contents() {
+        let mut printed_link = false;
+
+        for (pre_link, link, post_link) in line.split_links() {
+            printed_link = true;
+
+            let mut sub_pre = prependix.clone();
+            sub_pre.extend_from_slice(pre_link);
+
+            let mut sub_app = appendix.clone();
+            sub_app.extend_from_slice(post_link);
+
+            print_block(file, comment_formatter, link, blocks.get(link).unwrap(), blocks, sub_pre, sub_app)?;
         }
 
-        write!(file, "{}", line)?;
-
-        for post in appendix {
-            write!(file, "{}", post)?;
+        if !printed_link {
+            print_line(file, &prependix[..], line.get_text(), &appendix[..])?;
         }
-
-        writeln!(file, "")?;
-
-        Ok(())
     }
 
-    fn compile_file(&self, compiler_settings: &Option<CompilerSettings>, output_file_path: &Path) -> output::Result<()> {
-        if let Some(ref compiler_settings) = compiler_settings {
-            trace!("Compiling \"{}\"...", output_file_path.to_string_lossy());
-            let compiler_result = subprocess::Exec::shell(&compiler_settings.command)
-                .join()?;
+    Ok(())
+}
 
-            trace!("Finished compiling \"{}\"", output_file_path.to_string_lossy());
-            match compiler_result {
-                subprocess::ExitStatus::Exited(0) => Ok(()),
-                subprocess::ExitStatus::Exited(code) => Err(output::Error::FailedCompiler(code)),
-                subprocess::ExitStatus::Signaled(signal) => Err(output::Error::TerminatedCompiler(signal)),
-                _ => unreachable!(),
-            }
-        } else {
-            Err(output::Error::NoCompilerCommand)
+fn print_line(file: &mut fs::File, prependix: &[&str], line: &str, appendix: &[&str]) -> output::Result<()> {
+    for pre in prependix {
+        write!(file, "{}", pre)?;
+    }
+
+    write!(file, "{}", line)?;
+
+    for post in appendix {
+        write!(file, "{}", post)?;
+    }
+
+    writeln!(file, "")?;
+
+    Ok(())
+}
+
+fn compile_file(compiler_settings: &Option<CompilerSettings>, output_file_path: &Path) -> output::Result<()> {
+    if let Some(ref compiler_settings) = compiler_settings {
+        trace!("Compiling \"{}\"...", output_file_path.to_string_lossy());
+        let compiler_result = subprocess::Exec::shell(&compiler_settings.command)
+            .join()?;
+
+        trace!("Finished compiling \"{}\"", output_file_path.to_string_lossy());
+        match compiler_result {
+            subprocess::ExitStatus::Exited(0) => Ok(()),
+            subprocess::ExitStatus::Exited(code) => Err(output::Error::FailedCompiler(code)),
+            subprocess::ExitStatus::Signaled(signal) => Err(output::Error::TerminatedCompiler(signal)),
+            _ => unreachable!(),
         }
+    } else {
+        Err(output::Error::NoCompilerCommand)
     }
 }
-    
