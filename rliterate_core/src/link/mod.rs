@@ -25,10 +25,42 @@ use parser::{LitFile, Block, BlockModifier};
 use std::collections::{HashMap, VecDeque};
 use std::path::{PathBuf};
 
-mod grammar {
-    use super::{LinkPart, LinkedLine};
+peg::parser!{grammar grammar() for str {
+    rule whitespace() = " " / "\t"
 
-    include!(concat!(env!("OUT_DIR"), "/parsing.rs"));
+    rule non_whitespace() = !whitespace() [_]
+
+    rule _ = whitespace()+
+
+    rule name() = ((!link_end() non_whitespace())+) ++ _
+
+    rule link_start() = "@{"
+    rule link_end() = "}"
+
+    rule text() -> (LinkPart, &'input str)
+      = text:$((!link_start() [_])+) { (LinkPart::Text, text) }
+
+    rule link() -> (LinkPart, &'input str)
+      = link_start() _? name:$(name()) _? link_end() { (LinkPart::Link, name) }
+
+    pub rule link_line() -> LinkedLine<'input>
+      = parts:((text() / link()) *) {
+          let (parts, slices) = parts
+            .into_iter()
+            .fold((vec![], vec![]),
+            |(mut ps, mut ns), (part, name)| {
+                ps.push(part);
+                ns.push(name);
+                (ps, ns)
+            });
+
+          LinkedLine {
+              parts: parts,
+              slices: slices,
+              text: "",
+          }
+        }
+    }
 }
 
 pub struct LinkState<'a> {
@@ -39,11 +71,11 @@ impl<'a> LinkState<'a> {
     pub fn link(file_map: &'a parser::FileMap) -> Result<Self> {
         trace!("Started linking files...");
         let mut linked_file_map = HashMap::new();
-    
+
         for (path, lit_file) in file_map.iter() {
             info!("Linking up the blocks in \"{}\"", path.to_string_lossy());
             let linked_file = link_lit_file(lit_file)?;
-    
+
             linked_file_map.insert(path, linked_file);
         }
 
@@ -113,7 +145,7 @@ impl<'a> LinkedLine<'a> {
 
     pub fn split_links<'b>(&'b self) -> SplitLinks<'a, 'b> {
         SplitLinks {
-            first: true, 
+            first: true,
             current_position: 0_usize,
             parts: &self.parts[..],
             slices: &self.slices[..],
@@ -153,7 +185,7 @@ impl<'a, 'b : 'a> Iterator for SplitLinks<'a, 'b> {
     type Item = LinkInLine<'a, 'b>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        
+
         // First iteration
         if self.first {
             self.current_position = 0;
@@ -169,10 +201,10 @@ impl<'a, 'b : 'a> Iterator for SplitLinks<'a, 'b> {
         if self.current_position >= self.slices.len() {
             return None;
         }
-        
+
         Some((
-            &self.slices[0..self.current_position], 
-            self.slices[self.current_position], 
+            &self.slices[0..self.current_position],
+            self.slices[self.current_position],
             &self.slices[self.current_position+1..self.slices.len()]
         ))
     }
@@ -188,14 +220,14 @@ pub enum Error {
 
 fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
     let mut link_map = LinkMap::new();
-    
+
     let linked_sections : Vec<LinkedSection<'a>> = lit_file.sections.iter().map(|section| {
         LinkedSection {
             id: section.id,
             depth: section.depth,
             name: section.name.as_str(),
             blocks: section.blocks.iter().map(|block| {
-                link_block(block, &mut link_map)       
+                link_block(block, &mut link_map)
             }).collect()
         }
     }).collect();
@@ -207,7 +239,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
             })
         })
     }).collect();
-    
+
     for link in all_links {
         if !(link_map.contains_key(link)) {
             error!("Found a link to \"{}\", but that block doesn't exist", link);
@@ -230,14 +262,14 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
             let (front, back) = recursion_stack.as_slices();
             let mut recursion_path = front.join(" -> ");
             let back_path = back.join(" -> ");
-            
+
             if back_path.len() != 0 {
               recursion_path.push_str(" -> ");
               recursion_path.push_str(&back_path);
             }
 
 
-            error!("Found a recursive series of links: {}", recursion_path); 
+            error!("Found a recursive series of links: {}", recursion_path);
             return Err(Error::InfiniteCodeLoop);
           } else {
             recursion_stack.push_back(*link);
@@ -267,7 +299,7 @@ fn link_block<'a>(block: &'a Block, link_map : &mut LinkMap<'a>) -> LinkedBlock<
             let mut linked_to : Vec<&'a str> = linked_lines.iter()
                 .flat_map(|line| line.get_links())
                 .collect();
-    
+
             let key = name.as_str();
 
             if link_map.contains_key(key) {
@@ -276,7 +308,7 @@ fn link_block<'a>(block: &'a Block, link_map : &mut LinkMap<'a>) -> LinkedBlock<
             } else {
                 link_map.insert(name, linked_to);
             }
-    
+
             LinkedBlock::Code {
                 name: name,
                 modifiers: modifiers,
@@ -289,7 +321,7 @@ fn link_block<'a>(block: &'a Block, link_map : &mut LinkMap<'a>) -> LinkedBlock<
             }
         }
     }
-} 
+}
 
 fn link_lines<'a>(lines: &'a [String]) -> Vec<LinkedLine<'a>> {
     lines.iter().map(|line| {

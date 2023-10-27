@@ -19,8 +19,148 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// Load the grammar file
-include!(concat!(env!("OUT_DIR"), "/literate.rs"));
+peg::parser!{grammar grammar() for str {
+
+    rule newline() = "\n" / "\r\n" / ![_]
+
+    rule whitespace() = " " / "\t"
+
+    // Optional whitespace
+    rule _ = whitespace()*
+
+    // Significant whitespace
+    rule __ = whitespace()+
+
+    rule non_whitespace() = (!(whitespace() / newline()) [_])
+
+    rule comment() = "//" (!newline() [_])*
+
+    rule line(contents : rule<()>) = contents() _ comment()?
+
+    rule named_line<T>(contents : rule<T>) -> T = this:contents() _ comment()? { this }
+
+    rule line_slice() -> &'input str
+        = $((!newline() [_])+)
+
+    /// Commands
+
+    rule arg_separator() -> () = "---"
+
+    rule name() -> &'input str
+        = $(((!arg_separator() non_whitespace())+) ++ (__))
+
+    rule delimited_name(delim : rule<()>) -> &'input str
+        = $(((!delim() non_whitespace())+) ++ (__))
+
+    rule file_extension() -> &'input str
+        = $("." ['A'..='Z'|'a'..='z'|'_'|'-']+)
+
+    rule comment_pattern() -> &'input str
+        = line_slice()
+
+    rule line_num_pattern() -> &'input str
+        = line_slice()
+
+    rule error_pattern() -> &'input str
+        = line_slice()
+
+    rule shell_command() -> &'input str
+        = line_slice()
+
+    rule css_file() -> &'input str
+        = line_slice()
+
+    rule a_command() -> Command<'input>
+        = "title" __ title:name() { Command::Title(title) }
+        / esses:$("s"+) __ section_name:(name()?)
+            { Command::Section { name: section_name, depth: esses.len() - 1 } }
+        / "code_type" __ ctype:$(['A'..='Z'|'a'..='z'|'_'|'-']+) _ extension:file_extension()
+            { Command::CodeType { code_type: ctype, file_extension: extension } }
+        / "comment_type" __ pattern:comment_pattern() { Command::CommentType(pattern) }
+        / "line_numbers" __ pattern:line_num_pattern() { Command::LineNumbers(pattern) }
+        / "compiler" __ sh_command:shell_command() { Command::Compiler(sh_command) }
+        / "error_format" __ err_format:error_pattern() { Command::ErrorFormat(err_format) }
+        / "book" __ { Command::Book }
+        / "add_css" __ file:css_file() { Command::AddCss(file) }
+        / "overwrite_css" __ file:css_file() { Command::OverwriteCss(file) }
+        / "colorscheme" __ file:css_file() { Command::Colorscheme(file) }
+        / expected!("A valid command")
+
+    rule command() -> Command<'input>
+        = named_line(<"@" a_command:a_command() { a_command }>)
+
+    /// Code blocks
+
+    rule codeblock_delim() -> () = "---"
+
+    rule block_name() -> &'input str
+        = delimited_name(<arg_separator() / block_modifier_unit()>)
+
+    rule block_modifier() -> BlockModifier
+        = append()
+        / redef()
+        / arg_separator() _ mods:(mods:block_mods() ++ __ { mods })
+            { mods.into_iter().fold(BlockModifier::empty(), |set, flag| set | flag) }
+
+    rule block_modifier_unit() -> () = block_modifier() { () }
+
+    rule possible_block_modifier() -> BlockModifier
+        =  modifier:block_modifier() { modifier }
+        / _ { BlockModifier::empty() }
+
+    rule block_mods() -> BlockModifier
+        = append()
+        / redef()
+        / "noTangle" { BlockModifier::NoTangle }
+        / "noWeave" { BlockModifier::NoWeave }
+        / "noHeader" { BlockModifier::NoHeader}
+    rule append() -> BlockModifier
+        = "+=" { BlockModifier::Append }
+    rule redef() -> BlockModifier
+        = "-=" { BlockModifier::Redef }
+
+    rule codeblock_header() -> (&'input str, BlockModifier)
+        = named_line(
+            <codeblock_delim() _ name:block_name() _ mods:possible_block_modifier()
+                { (name, mods) }>)
+
+    /// Prose
+
+    rule prose() -> &'input str
+        = $(!"@" (!(newline() / "//") [_])*)
+
+    rule prose_line() -> &'input str
+        = named_line(<prose()>)
+
+    /// Chapter links
+
+    rule chapter_file() -> &'input str
+        = $((!"(" [_])+)
+    rule chapter() -> (&'input str, &'input str)
+        = "[" _ title:name() _ "](" filename:chapter_file() ")" { (title, filename) }
+
+    /// The whole file
+
+    pub rule partial_line() -> PartialLitLine<'input>
+        = block_header:codeblock_header()
+            { let (block_name, mods) = block_header;
+                PartialLitLine::CodeBlockStart(block_name, mods)
+            }
+        / line(<codeblock_delim()>) { PartialLitLine::CodeBlockEnd }
+        / line:(line_slice() / $("")) { PartialLitLine::Line(line) }
+
+    pub rule lit_line() -> LitLine<'input>
+        = command:command() { LitLine::Command(command) }
+        / chapter:named_line(<chapter()>)
+            { let (title, file) = chapter;
+              LitLine::Chapter { title: title, file_name: file, }
+            }
+        / prose:prose_line() { LitLine::Prose(prose) }
+}}
+
+use self::grammar::*;
+
+pub type ParseError = peg::error::ParseError<<str as peg::Parse>::PositionRepr>;
 
 pub enum Command<'a> {
     Title(&'a str),
