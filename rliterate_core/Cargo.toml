@@ -15,5 +15,5 @@ subprocess = "0.1"
 
 pulldown-cmark = "0.1"
 prettify-cmark = "0.1"
-maud = "0.19"
+maud = "0.25"
 
