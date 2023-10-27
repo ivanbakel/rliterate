@@ -29,16 +29,16 @@ use std::path::{PathBuf, Path};
 use std::fs;
 use std::io::{Write};
 
-pub fn tangle_blocks<'a>(settings: Settings<'a>, 
+pub fn tangle_blocks<'a>(settings: Settings<'a>,
                          canonical_code_blocks: &BlockMap) -> output::Result<()> {
     trace!("Starting the tangle...");
     for (name, block) in canonical_code_blocks.iter()
         .filter(|(_, block)| block.is_file() && block.print_to_tangle()) {
-        let output_relative_dir = settings.global_settings.out_dir.join(settings.relative_directory); 
+        let output_relative_dir = settings.global_settings.out_dir.join(settings.relative_directory);
         std::fs::DirBuilder::new().recursive(true).create(&output_relative_dir)?;
-        
+
         let output_file_path = output_relative_dir.join(name);
-        
+
         info!("Found a file block \"{}\", writing to \"{}\"", name, output_file_path.to_string_lossy());
         // To avoid cluttering a workspace during linting, we do not produce the tangle output when
         // compiling
@@ -47,8 +47,8 @@ pub fn tangle_blocks<'a>(settings: Settings<'a>,
             compile_file(settings.compiler, &output_file_path)?;
         } else {
             // Print the file out
-            let to_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(&output_file_path)?;
-            print_file(to_file, settings.comment_formatter, name, block, &canonical_code_blocks)?;
+            let mut to_file = fs::OpenOptions::new().create(true).truncate(true).write(true).open(&output_file_path)?;
+            print_file(&mut to_file, settings.comment_formatter, name, block, &canonical_code_blocks)?;
         }
     }
 
@@ -70,24 +70,24 @@ pub struct Globals {
     pub out_dir: PathBuf,
 }
 
-fn print_file<'a>(mut file: fs::File,
-                  comment_formatter: Option<&'a FormatFn<String>>,
-                  name: &'a str, 
-                  file_block: &CanonicalCodeBlock<'a>, 
-                  blocks: &BlockMap<'a>) -> output::Result<()> {
+fn print_file<'a, W: Write>(file : &mut W,
+                            comment_formatter: Option<&'a FormatFn<String>>,
+                            name: &'a str,
+                            file_block: &CanonicalCodeBlock<'a>,
+                            blocks: &BlockMap<'a>) -> output::Result<()> {
     trace!("Printing out \"{}\"...", name);
-    print_block(&mut file, comment_formatter, name, file_block, blocks, vec![], vec![])?;
+    print_block(file, comment_formatter, name, file_block, blocks, vec![], vec![])?;
     trace!("Finished printing out \"{}\"", name);
     Ok(())
 }
 
-fn print_block<'a>(file: &mut fs::File,
-                   comment_formatter: Option<&'a FormatFn<String>>,
-                   name: &'a str,
-                   block: &CanonicalCodeBlock<'a>, 
-                   blocks: &BlockMap<'a>,
-                   prependix: Vec<&'a str>,
-                   appendix: Vec<&'a str>) -> output::Result<()> {
+fn print_block<'a, W: Write>(file: &mut W,
+                             comment_formatter: Option<&'a FormatFn<String>>,
+                             name: &'a str,
+                             block: &CanonicalCodeBlock<'a>,
+                             blocks: &BlockMap<'a>,
+                             prependix: Vec<&'a str>,
+                             appendix: Vec<&'a str>) -> output::Result<()> {
     if block.print_header() {
         if let Some(comment_formatter) = comment_formatter {
             print_line(file, &prependix[..], &comment_formatter(name.to_string()), &appendix[..])?;
@@ -117,7 +117,7 @@ fn print_block<'a>(file: &mut fs::File,
     Ok(())
 }
 
-fn print_line(file: &mut fs::File, prependix: &[&str], line: &str, appendix: &[&str]) -> output::Result<()> {
+fn print_line<W: Write>(file: &mut W, prependix: &[&str], line: &str, appendix: &[&str]) -> output::Result<()> {
     for pre in prependix {
         write!(file, "{}", pre)?;
     }
