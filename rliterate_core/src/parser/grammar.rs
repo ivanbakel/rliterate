@@ -111,13 +111,13 @@ peg::parser!{grammar grammar() for str {
     rule block_mods() -> BlockModifier
         = append()
         / redef()
-        / "noTangle" { BlockModifier::NoTangle }
-        / "noWeave" { BlockModifier::NoWeave }
-        / "noHeader" { BlockModifier::NoHeader}
+        / "noTangle" { BlockModifier::NOTANGLE }
+        / "noWeave" { BlockModifier::NOWEAVE }
+        / "noHeader" { BlockModifier::NOHEADER}
     rule append() -> BlockModifier
-        = "+=" { BlockModifier::Append }
+        = "+=" { BlockModifier::APPEND }
     rule redef() -> BlockModifier
-        = "-=" { BlockModifier::Redef }
+        = "-=" { BlockModifier::REDEF }
 
     rule codeblock_header() -> (&'input str, BlockModifier)
         = named_line(
@@ -178,11 +178,11 @@ pub enum Command<'a> {
 
 bitflags! {
     pub struct BlockModifier: u32 {
-        const Append   = 0b00000001;
-        const Redef    = 0b00000010;
-        const NoTangle = 0b00000100;
-        const NoWeave  = 0b00001000;
-        const NoHeader = 0b00010000;
+        const APPEND   = 0b00000001;
+        const REDEF    = 0b00000010;
+        const NOTANGLE = 0b00000100;
+        const NOWEAVE  = 0b00001000;
+        const NOHEADER = 0b00010000;
     }
 }
 

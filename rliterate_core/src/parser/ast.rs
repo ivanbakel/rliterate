@@ -57,7 +57,7 @@ mod macros {
     }
 }
 
-pub type FormatFn<T> = Box<Fn(T) -> String>;
+pub type FormatFn<T> = Box<dyn Fn(T) -> String>;
 
 pub struct Metadata {
     pub relative_directory: PathBuf,
@@ -241,7 +241,8 @@ pub enum BookStatus {
 
 pub struct CompilerSettings {
     pub command: String,
-    formatter: &'static Fn(String, String, String, String) -> String
+    #[allow(dead_code)] // TODO: make use of this field
+    formatter: &'static dyn Fn(String, String, String, String) -> String
 }
 
 pub enum SectionName {
@@ -294,11 +295,11 @@ impl Block {
     }
 }
 
-fn try_guess_error_format(compiler: &String) -> Option<&'static Fn(String, String, String, String) -> String> {
+fn try_guess_error_format(_compiler: &String) -> Option<&'static dyn Fn(String, String, String, String) -> String> {
     None
 }
 
-fn generate_error_format(format_string: &str) -> &'static (Fn(String, String, String, String) -> String) {
+fn generate_error_format(_format_string: &str) -> &'static dyn Fn(String, String, String, String) -> String {
     panic!()
 }
 

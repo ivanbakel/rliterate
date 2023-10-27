@@ -75,7 +75,7 @@ fn build_title<'a>(title: &'a str) -> Vec<cmark::Event<'a>> {
     ]
 }
 
-fn build_section_header<'a>(settings: &super::Globals, name: Option<&'a str>, depth: usize) -> Vec<cmark::Event<'a>> {
+fn build_section_header<'a>(_settings: &super::Globals, name: Option<&'a str>, depth: usize) -> Vec<cmark::Event<'a>> {
     if let Some(name) = name {
         vec![
             cmark::Event::Start(cmark::Tag::Header(4 + (depth as i32))),
@@ -87,7 +87,7 @@ fn build_section_header<'a>(settings: &super::Globals, name: Option<&'a str>, de
     }
 }
 
-fn build_code_block<'a>(settings: &super::Globals, name: &'a str, lines: &'a [LinkedLine<'a>], block_map: &'a BlockMap, code_type: &'a str) -> Vec<cmark::Event<'a>> {
+fn build_code_block<'a>(_settings: &super::Globals, _name: &'a str, lines: &'a [LinkedLine<'a>], _block_map: &'a BlockMap, code_type: &'a str) -> Vec<cmark::Event<'a>> {
     let mut code_block : Vec<cmark::Event<'a>> = vec![];
 
     code_block.push(cmark::Event::Start(cmark::Tag::CodeBlock(Cow::Borrowed(code_type))));

@@ -280,7 +280,7 @@ fn link_lit_file<'a>(lit_file: &'a LitFile) -> Result<LinkedFile<'a>> {
         }
 
         Ok(())
-      };
+      }
 
       check_recursion(link_map.keys(), &mut recursion_stack, &link_map)?;
     }

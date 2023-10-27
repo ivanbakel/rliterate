@@ -84,15 +84,15 @@ impl<'a> CanonicalCodeBlock<'a> {
     }
 
     fn set_modifiers(&mut self, modifiers: BlockModifier) {
-        self.print_header = !modifiers.contains(BlockModifier::NoHeader);
-        self.print_to_tangle = !modifiers.contains(BlockModifier::NoTangle);
-        self.print_to_weave = !modifiers.contains(BlockModifier::NoWeave);
+        self.print_header = !modifiers.contains(BlockModifier::NOHEADER);
+        self.print_to_tangle = !modifiers.contains(BlockModifier::NOTANGLE);
+        self.print_to_weave = !modifiers.contains(BlockModifier::NOWEAVE);
     }
     
     fn add_modifiers(&mut self, modifiers: BlockModifier) {
-        self.print_header &= !modifiers.contains(BlockModifier::NoHeader);
-        self.print_to_tangle &= !modifiers.contains(BlockModifier::NoTangle);
-        self.print_to_weave &= !modifiers.contains(BlockModifier::NoWeave);
+        self.print_header &= !modifiers.contains(BlockModifier::NOHEADER);
+        self.print_to_tangle &= !modifiers.contains(BlockModifier::NOTANGLE);
+        self.print_to_weave &= !modifiers.contains(BlockModifier::NOWEAVE);
     }
 
     fn mark_redefined(&mut self, in_section: usize) {
@@ -117,12 +117,12 @@ pub fn canonicalise_code_blocks<'a>(sections: &[LinkedSection<'a>]) -> BlockMap<
                     if block_map.contains_key(name) {
                         let canonical = block_map.get_mut(name).unwrap();
 
-                        if modifiers.contains(BlockModifier::Redef) {
+                        if modifiers.contains(BlockModifier::REDEF) {
                             canonical.replace_lines(lines);
                             canonical.set_modifiers(*modifiers);
                             canonical.mark_redefined(section.id);
                         } else {
-                            if modifiers.contains(BlockModifier::Append) {
+                            if modifiers.contains(BlockModifier::APPEND) {
                                 canonical.add_modifiers(*modifiers);
                             }
                             canonical.append_lines(lines);
