@@ -19,8 +19,6 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#![feature(proc_macro_hygiene)]
-
 #[macro_use]
 extern crate bitflags;
 #[macro_use]
